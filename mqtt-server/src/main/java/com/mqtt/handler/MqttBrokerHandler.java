@@ -1,5 +1,7 @@
 package com.mqtt.handler;
 
+import com.alibaba.fastjson.JSONObject;
+import com.mqtt.model.ClientSubModel;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -15,6 +17,7 @@ import io.netty.util.ReferenceCountUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -284,7 +287,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
 
     private void recordSubedTopicQueueForClient(Attribute<String> clientId, MqttTopicSubscription sub) {
         List<String> clientTopicList = clientSubedTopics.get(clientId.get());
-        if(ObjectUtils.isEmpty(clientTopicList)){
+        if(clientTopicList==null || clientTopicList.isEmpty()){
             clientTopicList=new ArrayList<>();
             clientTopicList.add(sub.topicName());
         }else {
@@ -301,7 +304,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         Optional.ofNullable(topicList).ifPresent(tl->{
             topicList.forEach(topic->{
                 MqttPublishMessage publishMessage = retainedPubMsgQueue.get(topic);
-                if(!ObjectUtils.isEmpty(publishMessage)){
+                if(publishMessage!=null){
                     ctx.writeAndFlush(publishMessage);
                 }
             });
