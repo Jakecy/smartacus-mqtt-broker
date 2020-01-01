@@ -15,6 +15,7 @@
  */
 package com.config;
 
+import com.message.MqttLastWill;
 import io.netty.channel.Channel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.mqtt.MqttVersion;
@@ -26,7 +27,6 @@ import java.util.Random;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public final class MqttClientConfig {
-
     private final SslContext sslContext;
     private final String randomClientId;
 

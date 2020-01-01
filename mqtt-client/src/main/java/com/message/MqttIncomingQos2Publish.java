@@ -13,7 +13,7 @@ import java.util.function.Consumer;
  * @Version 1.0
  * @Note
  */
-public class MqttIncomingQos2Publish {
+final class MqttIncomingQos2Publish {
 
     private final MqttPublishMessage incomingPublish;
 

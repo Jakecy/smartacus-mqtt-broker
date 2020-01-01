@@ -14,14 +14,14 @@ import java.util.function.BiConsumer;
  * @Version 1.0
  * @Note
  */
-final class RetransmissionHandler <T extends MqttMessage> {
+ public final class RetransmissionHandler <T extends MqttMessage> {
 
     private ScheduledFuture<?> timer;
     private int timeout = 10;
     private BiConsumer<MqttFixedHeader, T> handler;
     private T originalMessage;
 
-    void start(EventLoop eventLoop){
+public     void start(EventLoop eventLoop){
         if(eventLoop == null){
             throw new NullPointerException("eventLoop");
         }
@@ -41,17 +41,17 @@ final class RetransmissionHandler <T extends MqttMessage> {
         }, timeout, TimeUnit.SECONDS);
     }
 
-    void stop(){
+   public void stop(){
         if(this.timer != null){
             this.timer.cancel(true);
         }
     }
 
-    void setHandle(BiConsumer<MqttFixedHeader, T> runnable) {
+  public   void setHandle(BiConsumer<MqttFixedHeader, T> runnable) {
         this.handler = runnable;
     }
 
-    void setOriginalMessage(T originalMessage) {
+   public void setOriginalMessage(T originalMessage) {
         this.originalMessage = originalMessage;
     }
 }

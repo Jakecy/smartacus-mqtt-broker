@@ -1,7 +1,10 @@
 package com.handler;
 
+import com.client.MqttClientImpl;
 import com.google.common.collect.ImmutableSet;
 import com.message.MqttPendingPublish;
+import com.message.MqttSubscription;
+import com.result.MqttConnectResult;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;

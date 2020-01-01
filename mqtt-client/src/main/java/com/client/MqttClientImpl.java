@@ -1,10 +1,14 @@
 package com.client;
 
+import com.config.MqttClientConfig;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.handler.MqttChannelHandler;
 import com.handler.MqttHandler;
 import com.message.MqttPendingPublish;
+import com.message.MqttPendingUnsubscription;
 import com.message.MqttSubscription;
+import com.result.MqttConnectResult;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -32,7 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class MqttClientImpl implements MqttClient {
 
 
-} //从服务端订阅的topic
+    //从服务端订阅的topic
     private final Set<String> serverSubscriptions = new HashSet<>();
     //等待取消订阅的topic
     private final IntObjectHashMap<MqttPendingUnsubscription> pendingServerUnsubscribes = new IntObjectHashMap<>();
@@ -145,7 +149,7 @@ public class MqttClientImpl implements MqttClient {
                     pendingPublishes.clear();
                     pendingSubscribeTopics.clear();
                     handlerToSubscribtion.clear();
-                    publish("TEST_TOPIC",Unpooled.wrappedBuffer("测试消息".getBytes()));
+                    publish("TEST_TOPIC", Unpooled.wrappedBuffer("测试消息".getBytes()));
                     scheduleConnectIfRequired(host, port, true);
                 });
             } else {
@@ -176,7 +180,6 @@ public class MqttClientImpl implements MqttClient {
         }
         return connect(host, port);
     }
-
 
 
     /**
@@ -500,35 +503,37 @@ public class MqttClientImpl implements MqttClient {
         return qos2PendingIncomingPublishes;
     }
 
-private class MqttChannelInitializer extends ChannelInitializer<SocketChannel> {
+    private class MqttChannelInitializer extends ChannelInitializer<SocketChannel> {
 
-    private final Promise<MqttConnectResult> connectFuture;
-    private final String host;
-    private final int port;
-    private final SslContext sslContext;
+        private final Promise<MqttConnectResult> connectFuture;
+        private final String host;
+        private final int port;
+        private final SslContext sslContext;
 
 
-    public MqttChannelInitializer(Promise<MqttConnectResult> connectFuture, String host, int port, SslContext sslContext) {
-        this.connectFuture = connectFuture;
-        this.host = host;
-        this.port = port;
-        this.sslContext = sslContext;
-    }
-
-    @Override
-    protected void initChannel(SocketChannel ch) throws Exception {
-        if (sslContext != null) {
-            ch.pipeline().addLast(sslContext.newHandler(ch.alloc(), host, port));
+        public MqttChannelInitializer(Promise<MqttConnectResult> connectFuture, String host, int port, SslContext sslContext) {
+            this.connectFuture = connectFuture;
+            this.host = host;
+            this.port = port;
+            this.sslContext = sslContext;
         }
 
-        ch.pipeline().addLast("mqttDecoder", new MqttDecoder(clientConfig.getMaxBytesInMessage()));
-        ch.pipeline().addLast("mqttEncoder", MqttEncoder.INSTANCE);
-        ch.pipeline().addLast("idleStateHandler", new IdleStateHandler(5, 1, 6,TimeUnit.SECONDS));
-        ch.pipeline().addLast("mqttPingHandler", new MqttPingHandler(2));
-        ch.pipeline().addLast("mqttHandler", new MqttChannelHandler(MqttClientImpl.this, connectFuture));
+        @Override
+        protected void initChannel(SocketChannel ch) throws Exception {
+            if (sslContext != null) {
+                ch.pipeline().addLast(sslContext.newHandler(ch.alloc(), host, port));
+            }
+
+            ch.pipeline().addLast("mqttDecoder", new MqttDecoder(clientConfig.getMaxBytesInMessage()));
+            ch.pipeline().addLast("mqttEncoder", MqttEncoder.INSTANCE);
+            ch.pipeline().addLast("idleStateHandler", new IdleStateHandler(5, 1, 6, TimeUnit.SECONDS));
+            ch.pipeline().addLast("mqttPingHandler", new MqttPingHandler(2));
+            ch.pipeline().addLast("mqttHandler", new MqttChannelHandler(MqttClientImpl.this, connectFuture));
+        }
     }
-}
 
     MqttHandler getDefaultHandler() {
         return defaultHandler;
     }
+
+}
