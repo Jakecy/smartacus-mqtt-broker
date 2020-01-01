@@ -7,6 +7,20 @@
     <groupId>mqtt-server</groupId>
     <artifactId>mqtt-server</artifactId>
     <version>1.0-SNAPSHOT</version>
-
+    <dependencies>
+        <!--引入mogdb的依赖-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-mongodb</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>log4j-over-slf4j</artifactId>
+        </dependency>
+    </dependencies>
     
 </project>
