@@ -166,6 +166,14 @@ step2:  第二次使用应答机制来对pubRec报文进行确认，从而确保
 * 对于发送方来说，收到了pubRec报文，就意味着，pub报文已经被接收方确定接收了。收到了pubComp报文，就意味着，pubRel报文已经确定被接收方接收了。
 
 
+### 关于IdleStateHandler的使用说明
+
+  如果要了解IdleStateHandler的使用说明，请查看我的博客地址：
+  [IdleStateHandler](https://www.jianshu.com/p/19bee119004f)
+
+
+
+
 ## 计划功能列表
    
  -计划功能列表：
