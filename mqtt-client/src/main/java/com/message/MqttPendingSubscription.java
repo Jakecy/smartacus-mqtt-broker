@@ -1,5 +1,7 @@
 package com.message;
 
+import com.handler.MqttHandler;
+import com.handler.RetransmissionHandler;
 import io.netty.channel.EventLoop;
 import io.netty.handler.codec.mqtt.MqttSubscribeMessage;
 import io.netty.util.concurrent.Promise;
@@ -25,7 +27,7 @@ public class MqttPendingSubscription {
 
     private boolean sent = false;
 
-    MqttPendingSubscription(Promise<Void> future, String topic, MqttSubscribeMessage message) {
+    public MqttPendingSubscription(Promise<Void> future, String topic, MqttSubscribeMessage message) {
         this.future = future;
         this.topic = topic;
         this.subscribeMessage = message;
@@ -33,7 +35,7 @@ public class MqttPendingSubscription {
         this.retransmissionHandler.setOriginalMessage(message);
     }
 
-    Promise<Void> getFuture() {
+    public Promise<Void> getFuture() {
         return future;
     }
 
@@ -41,11 +43,11 @@ public class MqttPendingSubscription {
         return topic;
     }
 
-    boolean isSent() {
+   public boolean isSent() {
         return sent;
     }
 
-    void setSent(boolean sent) {
+    public  void setSent(boolean sent) {
         this.sent = sent;
     }
 
@@ -53,7 +55,7 @@ public class MqttPendingSubscription {
         return subscribeMessage;
     }
 
-    void addHandler(MqttHandler handler, boolean once){
+    public    void addHandler(MqttHandler handler, boolean once){
         this.handlers.add(new MqttPendingHandler(handler, once));
     }
 
@@ -61,7 +63,7 @@ public class MqttPendingSubscription {
         return handlers;
     }
 
-    void startRetransmitTimer(EventLoop eventLoop, Consumer<Object> sendPacket) {
+    public  void startRetransmitTimer(EventLoop eventLoop, Consumer<Object> sendPacket) {
         if(this.sent){ //If the packet is sent, we can start the retransmit timer
             this.retransmissionHandler.setHandle((fixedHeader, originalMessage) ->
                     sendPacket.accept(new MqttSubscribeMessage(fixedHeader, originalMessage.variableHeader(), originalMessage.payload())));
@@ -69,7 +71,7 @@ public class MqttPendingSubscription {
         }
     }
 
-    void onSubackReceived(){
+    public   void onSubackReceived(){
         this.retransmissionHandler.stop();
     }
 

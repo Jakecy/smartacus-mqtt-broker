@@ -26,7 +26,7 @@ public class MqttPingHandler extends ChannelInboundHandlerAdapter {
 
     private ScheduledFuture<?> pingRespTimeout;
 
-    MqttPingHandler(int keepaliveSeconds) {
+    public MqttPingHandler(int keepaliveSeconds) {
         this.keepaliveSeconds = keepaliveSeconds;
     }
 

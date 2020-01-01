@@ -1,5 +1,6 @@
 package com.message;
 
+import com.handler.RetransmissionHandler;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.EventLoop;
 import io.netty.handler.codec.mqtt.MqttMessage;
@@ -54,7 +55,7 @@ public class MqttPendingPublish {
         return sent;
     }
 
-    void setSent(boolean sent) {
+  public   void setSent(boolean sent) {
         this.sent = sent;
     }
 

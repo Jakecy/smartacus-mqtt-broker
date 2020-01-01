@@ -18,18 +18,18 @@ import io.netty.util.concurrent.Promise;
  * @Version 1.0
  * @Note
  */
-public class MqttChannelHandler extends SimpleChannelInboundHandler<MqttMessage> {
+public final class MqttChannelHandler extends SimpleChannelInboundHandler<MqttMessage> {
 
     private final MqttClientImpl client;
     private final Promise<MqttConnectResult> connectFuture;
 
-    MqttChannelHandler(MqttClientImpl client, Promise<MqttConnectResult> connectFuture) {
+    public MqttChannelHandler(MqttClientImpl client, Promise<MqttConnectResult> connectFuture) {
         this.client = client;
         this.connectFuture = connectFuture;
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, MqttMessage msg) throws Exception {
+    protected void messageReceived(ChannelHandlerContext ctx, MqttMessage msg) throws Exception {
         switch (msg.fixedHeader().messageType()) {
             case CONNACK:
                 handleConack(ctx.channel(), (MqttConnAckMessage) msg);

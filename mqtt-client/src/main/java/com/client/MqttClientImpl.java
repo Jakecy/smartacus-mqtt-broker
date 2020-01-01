@@ -1,11 +1,14 @@
 package com.client;
 
 import com.config.MqttClientConfig;
+import com.exception.ChannelClosedException;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.handler.MqttChannelHandler;
 import com.handler.MqttHandler;
+import com.handler.MqttPingHandler;
 import com.message.MqttPendingPublish;
+import com.message.MqttPendingSubscription;
 import com.message.MqttPendingUnsubscription;
 import com.message.MqttSubscription;
 import com.result.MqttConnectResult;
@@ -471,7 +474,7 @@ public class MqttClientImpl implements MqttClient {
         }
     }
 
-    IntObjectHashMap<MqttPendingSubscription> getPendingSubscriptions() {
+    public   IntObjectHashMap<MqttPendingSubscription> getPendingSubscriptions() {
         return pendingSubscriptions;
     }
 
@@ -532,7 +535,7 @@ public class MqttClientImpl implements MqttClient {
         }
     }
 
-    MqttHandler getDefaultHandler() {
+   public MqttHandler getDefaultHandler() {
         return defaultHandler;
     }
 

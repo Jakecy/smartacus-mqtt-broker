@@ -1,5 +1,7 @@
 package com.message;
 
+import com.handler.MqttHandler;
+
 import java.util.regex.Pattern;
 
 /**
@@ -18,7 +20,7 @@ public class MqttSubscription {
 
     private boolean called;
 
-    MqttSubscription(String topic, MqttHandler handler, boolean once) {
+  public   MqttSubscription(String topic, MqttHandler handler, boolean once) {
         if(topic == null){
             throw new NullPointerException("topic");
         }
