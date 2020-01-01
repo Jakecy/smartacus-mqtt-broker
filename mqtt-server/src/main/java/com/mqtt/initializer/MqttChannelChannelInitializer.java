@@ -1,5 +1,6 @@
 package com.mqtt.initializer;
 
+import com.mqtt.handler.MqttBrokerHandler;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
@@ -33,6 +34,6 @@ public class MqttChannelChannelInitializer  extends ChannelInitializer {
         pipeline.addLast("heartbeatHandler",new IdleStateHandler(50,30,0,TimeUnit.SECONDS));
         //4、把自己的handler加入到管道的末端
         //channel.pipeline().addLast("mqttPingHandler", new MqttPingHandler(5));//定义keepalive时间为5s
-        pipeline.addLast("myHeartBeatHandler",new MqttHeartBeatBrokerHandler());
+        pipeline.addLast("brokerHandler",new MqttBrokerHandler());
     }
 }
