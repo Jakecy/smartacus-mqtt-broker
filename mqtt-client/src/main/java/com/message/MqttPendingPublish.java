@@ -51,7 +51,7 @@ public class MqttPendingPublish {
         return payload;
     }
 
-    boolean isSent() {
+    public   boolean isSent() {
         return sent;
     }
 
@@ -67,27 +67,27 @@ public class MqttPendingPublish {
         return qos;
     }
 
-    void startPublishRetransmissionTimer(EventLoop eventLoop, Consumer<Object> sendPacket) {
+    public  void startPublishRetransmissionTimer(EventLoop eventLoop, Consumer<Object> sendPacket) {
         this.publishRetransmissionHandler.setHandle(((fixedHeader, originalMessage) ->
                 sendPacket.accept(new MqttPublishMessage(fixedHeader, originalMessage.variableHeader(), this.payload.retain()))));
         this.publishRetransmissionHandler.start(eventLoop);
     }
 
-    void onPubackReceived() {
+    public  void onPubackReceived() {
         this.publishRetransmissionHandler.stop();
     }
 
-    void setPubrelMessage(MqttMessage pubrelMessage) {
+    public   void setPubrelMessage(MqttMessage pubrelMessage) {
         this.pubrelRetransmissionHandler.setOriginalMessage(pubrelMessage);
     }
 
-    void startPubrelRetransmissionTimer(EventLoop eventLoop, Consumer<Object> sendPacket) {
+    public  void startPubrelRetransmissionTimer(EventLoop eventLoop, Consumer<Object> sendPacket) {
         this.pubrelRetransmissionHandler.setHandle((fixedHeader, originalMessage) ->
                 sendPacket.accept(new MqttMessage(fixedHeader, originalMessage.variableHeader())));
         this.pubrelRetransmissionHandler.start(eventLoop);
     }
 
-    void onPubcompReceived() {
+    public  void onPubcompReceived() {
         this.pubrelRetransmissionHandler.stop();
     }
 }
