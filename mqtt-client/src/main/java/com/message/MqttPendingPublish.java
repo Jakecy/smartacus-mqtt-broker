@@ -29,7 +29,7 @@ public class MqttPendingPublish {
 
     private boolean sent = false;
 
-    MqttPendingPublish(int messageId, Promise<Void> future, ByteBuf payload, MqttPublishMessage message, MqttQoS qos) {
+  public   MqttPendingPublish(int messageId, Promise<Void> future, ByteBuf payload, MqttPublishMessage message, MqttQoS qos) {
         this.messageId = messageId;
         this.future = future;
         this.payload = payload;

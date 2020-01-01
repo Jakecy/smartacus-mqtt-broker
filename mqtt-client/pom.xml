@@ -54,6 +54,11 @@
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>21.0</version>
+        </dependency>
         <!--引入lombok相关的依赖-->
         <dependency>
             <groupId>org.projectlombok</groupId>
