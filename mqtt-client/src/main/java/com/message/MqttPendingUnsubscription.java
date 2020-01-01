@@ -20,7 +20,7 @@ public class MqttPendingUnsubscription {
 
     private final RetransmissionHandler<MqttUnsubscribeMessage> retransmissionHandler = new RetransmissionHandler<>();
 
-    MqttPendingUnsubscription(Promise<Void> future, String topic, MqttUnsubscribeMessage unsubscribeMessage) {
+    public    MqttPendingUnsubscription(Promise<Void> future, String topic, MqttUnsubscribeMessage unsubscribeMessage) {
         this.future = future;
         this.topic = topic;
 
@@ -35,7 +35,7 @@ public class MqttPendingUnsubscription {
         return topic;
     }
 
-    void startRetransmissionTimer(EventLoop eventLoop, Consumer<Object> sendPacket) {
+    public    void startRetransmissionTimer(EventLoop eventLoop, Consumer<Object> sendPacket) {
         this.retransmissionHandler.setHandle((fixedHeader, originalMessage) ->
                 sendPacket.accept(new MqttUnsubscribeMessage(fixedHeader, originalMessage.variableHeader(), originalMessage.payload())));
         this.retransmissionHandler.start(eventLoop);

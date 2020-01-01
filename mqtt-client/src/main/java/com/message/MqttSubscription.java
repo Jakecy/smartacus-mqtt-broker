@@ -1,6 +1,7 @@
 package com.message;
 
 import com.handler.MqttHandler;
+import lombok.Data;
 
 import java.util.regex.Pattern;
 
@@ -10,6 +11,7 @@ import java.util.regex.Pattern;
  * @Version 1.0
  * @Note
  */
+@Data
 public class MqttSubscription {
 
     private final String topic;
@@ -33,7 +35,7 @@ public class MqttSubscription {
         this.topicRegex = Pattern.compile(topic.replace("+", "[^/]+").replace("#", ".+") + "$");
     }
 
-    String getTopic() {
+    public   String getTopic() {
         return topic;
     }
 
@@ -41,15 +43,15 @@ public class MqttSubscription {
         return handler;
     }
 
-    boolean isOnce() {
+    public   boolean isOnce() {
         return once;
     }
 
-    boolean isCalled() {
+    public   boolean isCalled() {
         return called;
     }
 
-    boolean matches(String topic){
+    public    boolean matches(String topic){
         return this.topicRegex.matcher(topic).matches();
     }
 
@@ -71,7 +73,7 @@ public class MqttSubscription {
         return result;
     }
 
-    void setCalled(boolean called) {
+    public   void setCalled(boolean called) {
         this.called = called;
     }
 }

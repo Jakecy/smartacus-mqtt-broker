@@ -475,19 +475,19 @@ public class MqttClientImpl implements MqttClient {
         return pendingSubscriptions;
     }
 
-    HashMultimap<String, MqttSubscription> getSubscriptions() {
+    public    HashMultimap<String, MqttSubscription> getSubscriptions() {
         return subscriptions;
     }
 
-    Set<String> getPendingSubscribeTopics() {
+    public   Set<String> getPendingSubscribeTopics() {
         return pendingSubscribeTopics;
     }
 
-    HashMultimap<MqttHandler, MqttSubscription> getHandlerToSubscribtion() {
+    public   HashMultimap<MqttHandler, MqttSubscription> getHandlerToSubscribtion() {
         return handlerToSubscribtion;
     }
 
-    Set<String> getServerSubscriptions() {
+    public   Set<String> getServerSubscriptions() {
         return serverSubscriptions;
     }
 
@@ -495,11 +495,11 @@ public class MqttClientImpl implements MqttClient {
         return pendingServerUnsubscribes;
     }
 
-    IntObjectHashMap<MqttPendingPublish> getPendingPublishes() {
+    public    IntObjectHashMap<MqttPendingPublish> getPendingPublishes() {
         return pendingPublishes;
     }
 
-    IntObjectHashMap<MqttIncomingQos2Publish> getQos2PendingIncomingPublishes() {
+    public    IntObjectHashMap<MqttIncomingQos2Publish> getQos2PendingIncomingPublishes() {
         return qos2PendingIncomingPublishes;
     }
 

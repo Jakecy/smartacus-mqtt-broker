@@ -39,7 +39,7 @@ public class MqttPendingSubscription {
         return future;
     }
 
-    String getTopic() {
+    public     String getTopic() {
         return topic;
     }
 
@@ -51,7 +51,7 @@ public class MqttPendingSubscription {
         this.sent = sent;
     }
 
-    MqttSubscribeMessage getSubscribeMessage() {
+    public   MqttSubscribeMessage getSubscribeMessage() {
         return subscribeMessage;
     }
 
@@ -59,7 +59,7 @@ public class MqttPendingSubscription {
         this.handlers.add(new MqttPendingHandler(handler, once));
     }
 
-    Set<MqttPendingHandler> getHandlers() {
+    public  Set<MqttPendingHandler> getHandlers() {
         return handlers;
     }
 
@@ -75,7 +75,7 @@ public class MqttPendingSubscription {
         this.retransmissionHandler.stop();
     }
 
-    final class MqttPendingHandler {
+    public final class MqttPendingHandler {
         private final MqttHandler handler;
         private final boolean once;
 
@@ -84,7 +84,7 @@ public class MqttPendingSubscription {
             this.once = once;
         }
 
-        MqttHandler getHandler() {
+        public      MqttHandler getHandler() {
             return handler;
         }
 

@@ -15,7 +15,7 @@ public class MqttConnectResult {
     private final MqttConnectReturnCode returnCode;
     private final ChannelFuture closeFuture;
 
-    MqttConnectResult(boolean success, MqttConnectReturnCode returnCode, ChannelFuture closeFuture) {
+    public    MqttConnectResult(boolean success, MqttConnectReturnCode returnCode, ChannelFuture closeFuture) {
         this.success = success;
         this.returnCode = returnCode;
         this.closeFuture = closeFuture;

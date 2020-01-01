@@ -39,15 +39,15 @@ public class MqttPendingPublish {
         this.publishRetransmissionHandler.setOriginalMessage(message);
     }
 
-    int getMessageId() {
+    public  int getMessageId() {
         return messageId;
     }
 
-    Promise<Void> getFuture() {
+    public   Promise<Void> getFuture() {
         return future;
     }
 
-    ByteBuf getPayload() {
+    public   ByteBuf getPayload() {
         return payload;
     }
 
@@ -59,11 +59,11 @@ public class MqttPendingPublish {
         this.sent = sent;
     }
 
-    MqttPublishMessage getMessage() {
+    public    MqttPublishMessage getMessage() {
         return message;
     }
 
-    MqttQoS getQos() {
+    public    MqttQoS getQos() {
         return qos;
     }
 
