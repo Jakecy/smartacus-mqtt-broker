@@ -88,7 +88,7 @@ public class MqttPendingSubscription {
             return handler;
         }
 
-        boolean isOnce() {
+        public    boolean isOnce() {
             return once;
         }
     }

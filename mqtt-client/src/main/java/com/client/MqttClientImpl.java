@@ -406,7 +406,7 @@ public class MqttClientImpl implements MqttClient {
     }
 
 
-    ChannelFuture sendAndFlushPacket(Object message) {
+    public    ChannelFuture sendAndFlushPacket(Object message) {
         if (this.channel == null) {
             return null;
         }
@@ -491,7 +491,7 @@ public class MqttClientImpl implements MqttClient {
         return serverSubscriptions;
     }
 
-    IntObjectHashMap<MqttPendingUnsubscription> getPendingServerUnsubscribes() {
+    public   IntObjectHashMap<MqttPendingUnsubscription> getPendingServerUnsubscribes() {
         return pendingServerUnsubscribes;
     }
 

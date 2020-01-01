@@ -27,11 +27,11 @@ public class MqttPendingUnsubscription {
         this.retransmissionHandler.setOriginalMessage(unsubscribeMessage);
     }
 
-    Promise<Void> getFuture() {
+    public    Promise<Void> getFuture() {
         return future;
     }
 
-    String getTopic() {
+    public    String getTopic() {
         return topic;
     }
 
@@ -41,7 +41,7 @@ public class MqttPendingUnsubscription {
         this.retransmissionHandler.start(eventLoop);
     }
 
-    void onUnsubackReceived(){
+    public   void onUnsubackReceived(){
         this.retransmissionHandler.stop();
     }
 }

@@ -16,13 +16,13 @@
 package com.config;
 
 import com.message.MqttLastWill;
+import com.sun.istack.internal.Nullable;
 import io.netty.channel.Channel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.mqtt.MqttVersion;
 import io.netty.handler.ssl.SslContext;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+
 import java.util.Random;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
@@ -33,10 +33,10 @@ public final class MqttClientConfig {
     private String clientId;
     private int timeoutSeconds = 60;
     private MqttVersion protocolVersion = MqttVersion.MQTT_3_1;
-    @Nullable private String username = null;
-    @Nullable private String password = null;
+    private String username = null;
+     private String password = null;
     private boolean cleanSession = true;
-    @Nullable private MqttLastWill lastWill;
+    private MqttLastWill lastWill;
     private Class<? extends Channel> channelClass = NioSocketChannel.class;
 
     private boolean reconnect = true;
@@ -59,7 +59,7 @@ public final class MqttClientConfig {
         this.randomClientId = id;
     }
 
-    @Nonnull
+
     public String getClientId() {
         return clientId;
     }
