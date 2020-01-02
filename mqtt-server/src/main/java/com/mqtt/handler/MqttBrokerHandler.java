@@ -5,7 +5,7 @@ import com.mqtt.common.ChannelAttr;
 import com.mqtt.config.UsernamePasswordAuth;
 import com.mqtt.connection.ConnectionFactory;
 import com.mqtt.manager.SessionManager;
-import com.mqtt.model.ClientSubModel;
+import com.mqtt.message.ClientSubModel;
 import com.mqtt.utils.CompellingUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;

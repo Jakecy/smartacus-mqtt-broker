@@ -1,4 +1,4 @@
-package com.mqtt.model;
+package com.mqtt.message;
 
 import lombok.Data;
 

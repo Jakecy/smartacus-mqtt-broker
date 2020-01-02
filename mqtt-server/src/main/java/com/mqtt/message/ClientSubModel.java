@@ -1,4 +1,4 @@
-package com.mqtt.model;
+package com.mqtt.message;
 
 import io.netty.handler.codec.mqtt.MqttQoS;
 import lombok.Data;
