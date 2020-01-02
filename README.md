@@ -48,8 +48,11 @@ MQTT（Message Queue Telemetry Transport）是一个轻量级开放的消息协�
 | 实现PUBLISH报文  | 难 | xxxx|
 |Qos服务质量保证  | 难 | xxxx|
 |发布订阅模式  | 中 | xxxx|
+| 支持auth2认证  | 中   |xxxx  |
+| 服务启动、停止、重启  | 中   |xxxx  |
 | 多项目自由配置 | 中 | xxxx|
 | 支持消息持久化  | 易 | xxxx|
+
 
 
 ###  已实现的功能列表
