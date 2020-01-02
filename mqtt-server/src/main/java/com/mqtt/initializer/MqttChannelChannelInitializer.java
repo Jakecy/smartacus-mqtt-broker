@@ -48,6 +48,6 @@ public class MqttChannelChannelInitializer  extends ChannelInitializer {
         pipeline.addLast("heartbeatHandler",new IdleStateHandler(50,30,0,TimeUnit.SECONDS));
         //4、把自己的handler加入到管道的末端
         //channel.pipeline().addLast("mqttPingHandler", new MqttPingHandler(5));//定义keepalive时间为5s
-        pipeline.addLast("brokerHandler",new MqttBrokerHandler());
+        pipeline.addLast("brokerHandler",new MqttBrokerHandler(sessionManager,connectionFactory));
     }
 }

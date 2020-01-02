@@ -3,14 +3,13 @@ package com.mqtt.handler;
 import com.alibaba.fastjson.JSONObject;
 import com.mqtt.common.ChannelAttr;
 import com.mqtt.config.UsernamePasswordAuth;
+import com.mqtt.connection.ConnectionFactory;
+import com.mqtt.manager.SessionManager;
 import com.mqtt.model.ClientSubModel;
 import com.mqtt.utils.CompellingUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.EventLoop;
+import io.netty.channel.*;
 import io.netty.handler.codec.mqtt.*;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
@@ -37,6 +36,7 @@ import static io.netty.handler.codec.mqtt.MqttMessageIdVariableHeader.from;
  * @Version 1.0
  * @Note
  */
+@ChannelHandler.Sharable
 public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
 
     private static final String ATTR_CONNECTION = "connectionList";
@@ -85,9 +85,14 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
     //pubComp等待队列
     Queue<MqttPubAckMessage> pendingCompPubMsgs = new ConcurrentLinkedQueue<MqttPubAckMessage>();
 
+    private final SessionManager   sessionManager;
 
+    private final ConnectionFactory  connectionFactory;
 
-    private ConcurrentHashMap<String, Channel> sessionChannelMap = new ConcurrentHashMap<String, Channel>();
+    public MqttBrokerHandler(SessionManager sessionManager, ConnectionFactory connectionFactory) {
+        this.sessionManager = sessionManager;
+        this.connectionFactory=connectionFactory;
+    }
 
 
 
