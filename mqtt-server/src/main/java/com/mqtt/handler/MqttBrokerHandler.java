@@ -45,7 +45,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
 
 
 
-    private final static ConcurrentMap<String, Channel> pool = new ConcurrentHashMap<>();
+    //private final static ConcurrentMap<String, Channel> pool = new ConcurrentHashMap<>();
 
     //使用原子性的AtomicInteger作为packetId
     private final AtomicInteger lastPacketId = new AtomicInteger(1);
@@ -329,7 +329,8 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         //3、从连接列表中，移除此连接
         ctx.close();
         String clientId = CompellingUtil.getClientId(ctx.channel());
-        pool.remove(clientId);
+        connectionFactory.removeConnection(clientId);
+        //pool.remove(clientId);
     }
 
     /**
@@ -393,7 +394,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         System.out.println("============作为发送端处理Qos2级别的消息============");
         //转发publish消息
         notCompletePubMsgsSenderEnd.offer(pubMsg);
-        Channel targetChannel = pool.get(pubMsg.variableHeader().topicName());
+        Channel targetChannel = connectionFactory.getConnection(pubMsg.variableHeader().topicName()).getChannel();
         //
         MqttFixedHeader pubFixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false,
                 MqttQoS.EXACTLY_ONCE, true, 0);
@@ -420,7 +421,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
                         MqttQoS.EXACTLY_ONCE, true, 0);
                 MqttPublishVariableHeader publishVariableHeader = new MqttPublishVariableHeader(poll.variableHeader().topicName(), lastPacketId.intValue());
                 MqttPublishMessage resendPub = new MqttPublishMessage(pubFixedHeader, publishVariableHeader, poll.payload());
-                Channel channel = pool.get(resendPub.variableHeader().topicName());
+                Channel channel = connectionFactory.getConnection(resendPub.variableHeader().topicName()).getChannel();
                 if (channel != null) {
                     channel.writeAndFlush(resendPub);
                     pendingRecList.add(resendPub);
@@ -476,7 +477,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
             MqttFixedHeader recFixedHeader = new MqttFixedHeader(MqttMessageType.PUBREL, true,
                     MqttQoS.AT_LEAST_ONCE, false, 2);
             MqttPubAckMessage pubRelMessage = new MqttPubAckMessage(recFixedHeader, from(oldPub.variableHeader().packetId()));
-            Channel channel = pool.get(oldPub.variableHeader().topicName());
+            Channel channel = connectionFactory.getConnection(oldPub.variableHeader().topicName()).getChannel();
             if(channel!=null){
                 channel.writeAndFlush(pubRelMessage);
             }
@@ -499,7 +500,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
             MqttFixedHeader recFixedHeader = new MqttFixedHeader(MqttMessageType.PUBREC, false,
                     MqttQoS.AT_LEAST_ONCE, false, 2);
             MqttPubAckMessage pubRecMessage = new MqttPubAckMessage(recFixedHeader, from(oldPub.variableHeader().packetId()));
-            Channel channel = pool.get(oldPub.variableHeader().topicName());
+            Channel channel = connectionFactory.getConnection(oldPub.variableHeader().topicName()).getChannel();
             if(channel!=null){
                 channel.writeAndFlush(pubRecMessage);
             }
@@ -603,8 +604,8 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
 
     private void handleQos0PubMsg(ChannelHandlerContext ctx, MqttPublishMessage pubMsg) {
         System.out.println("=============处理Qos0的消息==============");
-        System.out.println(JSONObject.toJSONString(pool));
-        Channel targetChannel = pool.get(pubMsg.variableHeader().topicName());
+        System.out.println(JSONObject.toJSONString(connectionFactory));
+        Channel targetChannel = connectionFactory.getConnection(pubMsg.variableHeader().topicName()).getChannel();
         System.out.println(JSONObject.toJSONString(targetChannel));
         Optional.ofNullable(targetChannel).ifPresent(tc->{
             MqttFixedHeader pubFixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false,
@@ -629,10 +630,10 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         ctx.writeAndFlush(pubAck);
         //取出publish消息
         System.out.println("=============池中的链接有==============");
-        System.out.println(JSONObject.toJSONString(pool));
+        System.out.println(JSONObject.toJSONString(connectionFactory));
         System.out.println("==============publish消息的topic是===========");
         System.out.println(pubMsg.variableHeader().topicName());
-        Channel targetChannel = pool.get(pubMsg.variableHeader().topicName());
+        Channel targetChannel = connectionFactory.getConnection(pubMsg.variableHeader().topicName()).getChannel();
         System.out.println("================处理publish消息,转发===========");
         System.out.println("============目标channel===========");
         System.out.println(JSONObject.toJSONString(targetChannel));
@@ -670,7 +671,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
             MqttPublishVariableHeader publishVariableHeader=new MqttPublishVariableHeader(oldPubMsg.variableHeader().topicName(),oldPubMsg.variableHeader().packetId());
             MqttPublishMessage  rePub=new MqttPublishMessage(pubFixedHeader,publishVariableHeader,oldPubMsg.payload());
             //进行发送
-            Channel channel = pool.get(oldPubMsg.variableHeader().topicName());
+            Channel channel = connectionFactory.getConnection(oldPubMsg.variableHeader().topicName()).getChannel();
             if(channel!=null){
                 channel.writeAndFlush(rePub);
             }
@@ -736,12 +737,13 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         //取出固定头和可变头以及有效载荷
         MqttConnectVariableHeader connectVariableHeader = connectMsg.variableHeader();
         MqttConnectPayload connectPayload = connectMsg.payload();
-        System.out.println(JSONObject.toJSONString(pool));
+        System.out.println(JSONObject.toJSONString(connectionFactory));
         System.out.println(connectPayload.clientIdentifier());
         //pool.putIfAbsent(connectPayload.clientIdentifier(),ctx.channel());
-        pool.put(connectPayload.clientIdentifier(),ctx.channel());
-        //把此连接的clientId放入到channel的attach中
         ctx.channel().attr(ChannelAttr.ATTR_KEY_CLIENTID).set(connectPayload.clientIdentifier());
+        connectionFactory.create(ctx.channel(),sessionManager);
+        //connectionFactory.pu(CompellingUtil.getClientId(ctx.channel()),connectionFactory.create(ctx.channel(),sessionManager));
+        //把此连接的clientId放入到channel的attach中
         //1、从connectVariableHeader里读取 连接标志,共有6个连接标志
         //User Name Flag (1) 用户名标志
         //Password Flag (1) 密码标志
@@ -791,8 +793,8 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         channel.writeAndFlush(pubAck);
         //取出publish消息
         System.out.println("===============池中的链接有====================");
-        System.out.println(JSONObject.toJSONString(pool));
-        Channel targetChannel = pool.get(mqttMessage.variableHeader().topicName());
+        System.out.println(JSONObject.toJSONString(connectionFactory));
+        Channel targetChannel = connectionFactory.getConnection(mqttMessage.variableHeader().topicName()).getChannel();
         MqttFixedHeader pubFixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false,
                 MqttQoS.AT_MOST_ONCE, false, 0);
         MqttPublishVariableHeader publishVariableHeader=new MqttPublishVariableHeader("TEST",1);

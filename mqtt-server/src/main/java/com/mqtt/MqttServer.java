@@ -33,7 +33,7 @@ public class MqttServer {
                     //设置通道类型
                     .channel(NioServerSocketChannel.class)
                     //向通道的中添加handler初始化器
-                    .childHandler(new MqttChannelChannelInitializer())
+                    .childHandler(new MqttChannelChannelInitializer(sessionManager,connectionFactory))
                     .option(ChannelOption.SO_BACKLOG,128)
                     //设置子Socket的keepalive时间
                     .childOption(ChannelOption.SO_KEEPALIVE,true);
