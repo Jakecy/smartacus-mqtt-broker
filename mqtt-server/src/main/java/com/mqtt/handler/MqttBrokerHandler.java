@@ -1,6 +1,7 @@
 package com.mqtt.handler;
 
 import com.alibaba.fastjson.JSONObject;
+import com.mqtt.config.UsernamePasswordAuth;
 import com.mqtt.model.ClientSubModel;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -13,6 +14,7 @@ import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
+import io.netty.util.CharsetUtil;
 import io.netty.util.ReferenceCountUtil;
 
 import java.util.ArrayList;
@@ -748,7 +750,18 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         boolean willFlagFlag = connectVariableHeader.isWillFlag();
         int willQos = connectVariableHeader.willQos();
         boolean cleanSessionFlag = connectVariableHeader.isCleanSession();
-        if(userNameFlag){
+        if(UsernamePasswordAuth.auth){
+            if(userNameFlag&& passwordFlag){
+                //用户名和密码的校验
+                String userName = connectPayload.userName();
+                ByteBuf buf = Unpooled.wrappedBuffer(connectPayload.passwordInBytes());
+                String password =buf.toString(CharsetUtil.UTF_8);
+                if(!(UsernamePasswordAuth.username.equals(userName) &&UsernamePasswordAuth.password.equals(password))){
+                    ctx.close();//用户名密码不对拒绝连接
+                }
+            }else {
+                ctx.close();//关闭非法连接
+            }
         }
         MqttFixedHeader  fixedHeader=new MqttFixedHeader(MqttMessageType.CONNACK,false,MqttQoS.AT_LEAST_ONCE,false,2);
         MqttConnAckVariableHeader  connAckVheader=new MqttConnAckVariableHeader(MqttConnectReturnCode.CONNECTION_ACCEPTED,true);
@@ -757,24 +770,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         //ReferenceCountUtil.release(mqttMessage);
         System.out.println("服务端返回给客户端connack响应");
         System.out.println(connAckMessage.toString());
-       /* String userName = connectPayload.userName();
-        System.out.println("=================服务端根据连接标志取出的payload中username");
-        ByteBuf buf = Unpooled.wrappedBuffer(connectPayload.passwordInBytes());
-       String password= buf.toString(CharsetUtil.UTF_8);
-        System.out.println(buf.toString(CharsetUtil.UTF_8));
-        System.out.println("==========获取到的密码是： "+buf.toString(CharsetUtil.UTF_8));
-        //判断用户名和密码是否正确
-        if((userName.equals("client001") && "admin".equals(password))){
-            //如果密码不正确，就发送一个CONNECTION_REFUSED_BAD_USER_NAME_OR_PASSWORD的响应给客户端
-            MqttFixedHeader  fixedHeader=new MqttFixedHeader(MqttMessageType.CONNACK,false,MqttQoS.EXACTLY_ONCE,false,2);
-            MqttConnAckVariableHeader  connAckVheader=new MqttConnAckVariableHeader(MqttConnectReturnCode.CONNECTION_REFUSED_BAD_USER_NAME_OR_PASSWORD,
-                     false);
-            MqttConnAckMessage connAckMessage=new MqttConnAckMessage(fixedHeader,connAckVheader);
-            ctx.writeAndFlush(connAckMessage);
-            System.out.println("关闭客户端的channel");
-            ReferenceCountUtil.release(mqttMessage);
-            ctx.close();
-        }*/
+
     }
 
     private void handlePublishMsg(Channel channel, MqttPublishMessage mqttMessage) {
