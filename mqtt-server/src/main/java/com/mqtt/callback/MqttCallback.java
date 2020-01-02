@@ -7,4 +7,6 @@ package com.mqtt.callback;
  * @Note
  */
 public interface MqttCallback {
+
+
 }
