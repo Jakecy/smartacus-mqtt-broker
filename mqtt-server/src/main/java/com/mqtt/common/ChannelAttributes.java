@@ -8,7 +8,7 @@ import io.netty.util.AttributeKey;
  * @Version 1.0
  * @Note
  */
-public class ChannelAttr {
+public class ChannelAttributes {
 
     //把连接的channel的clientId取出并放置到此channel的attach中
     public static final String ATTR_CLIENTID = "ClientID";

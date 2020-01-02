@@ -1,7 +1,7 @@
 package com.mqtt.handler;
 
 import com.alibaba.fastjson.JSONObject;
-import com.mqtt.common.ChannelAttr;
+import com.mqtt.common.ChannelAttributes;
 import com.mqtt.config.UsernamePasswordAuth;
 import com.mqtt.connection.ConnectionFactory;
 import com.mqtt.manager.SessionManager;
@@ -194,7 +194,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         if(topics==null || topics.isEmpty()){
             ctx.close();
         }
-        Attribute<String> clientIdAttr = ctx.channel().attr(ChannelAttr.ATTR_KEY_CLIENTID);
+        Attribute<String> clientIdAttr = ctx.channel().attr(ChannelAttributes.ATTR_KEY_CLIENTID);
         String clientId = clientIdAttr.get();
         topics.forEach(t->{
             List<ClientSubModel> subModelList = subQueue.get(t);
@@ -249,7 +249,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         //遍历
         Optional.ofNullable(mqttTopicSubscriptions).ifPresent(mts->{
             mqttTopicSubscriptions.forEach(sub->{
-                Attribute<String> clientId = ctx.channel().attr(ChannelAttr.ATTR_KEY_CLIENTID);
+                Attribute<String> clientId = ctx.channel().attr(ChannelAttributes.ATTR_KEY_CLIENTID);
                 //record the client's subed topic queue
                 recordSubedTopicQueueForClient(clientId,sub);
                 List<ClientSubModel> subModelList = subQueue.get(sub.topicName());
@@ -305,7 +305,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
 
     private void deliveryRetainedPubMsgToSuber(ChannelHandlerContext ctx, MqttSubscribeMessage mqttMessage) {
         // detect if the topic exists a retained pub msg
-        Attribute<String> clientId = ctx.channel().attr(ChannelAttr.ATTR_KEY_CLIENTID);
+        Attribute<String> clientId = ctx.channel().attr(ChannelAttributes.ATTR_KEY_CLIENTID);
         //
         List<String> topicList = clientSubedTopics.get(clientId.get());
         Optional.ofNullable(topicList).ifPresent(tl->{
@@ -740,7 +740,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         System.out.println(JSONObject.toJSONString(connectionFactory));
         System.out.println(connectPayload.clientIdentifier());
         //pool.putIfAbsent(connectPayload.clientIdentifier(),ctx.channel());
-        ctx.channel().attr(ChannelAttr.ATTR_KEY_CLIENTID).set(connectPayload.clientIdentifier());
+        ctx.channel().attr(ChannelAttributes.ATTR_KEY_CLIENTID).set(connectPayload.clientIdentifier());
         connectionFactory.create(ctx.channel(),sessionManager);
         //connectionFactory.pu(CompellingUtil.getClientId(ctx.channel()),connectionFactory.create(ctx.channel(),sessionManager));
         //把此连接的clientId放入到channel的attach中

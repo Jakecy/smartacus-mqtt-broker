@@ -1,7 +1,7 @@
 package com.mqtt.connection;
 
 
-import com.mqtt.common.ChannelAttr;
+import com.mqtt.common.ChannelAttributes;
 import com.mqtt.manager.SessionManager;
 import io.netty.channel.Channel;
 
@@ -24,7 +24,7 @@ public class ConnectionFactory {
 
     public    ClientConnection  create(Channel channel, SessionManager sessionManager) {
         ClientConnection  connection=new ClientConnection(channel,sessionManager);
-        connectionFactory.put(channel.attr(ChannelAttr.ATTR_KEY_CLIENTID).get(),connection);
+        connectionFactory.put(channel.attr(ChannelAttributes.ATTR_KEY_CLIENTID).get(),connection);
         return connection;
     }
 

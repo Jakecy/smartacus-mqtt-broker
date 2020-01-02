@@ -1,6 +1,6 @@
 package com.mqtt.utils;
 
-import com.mqtt.common.ChannelAttr;
+import com.mqtt.common.ChannelAttributes;
 import io.netty.channel.Channel;
 
 /**
@@ -18,6 +18,6 @@ public class CompellingUtil {
      * @return
      */
     public static String getClientId(Channel channel) {
-        return channel.attr(ChannelAttr.ATTR_KEY_CLIENTID).get();
+        return channel.attr(ChannelAttributes.ATTR_KEY_CLIENTID).get();
     }
 }
