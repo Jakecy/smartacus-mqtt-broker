@@ -75,28 +75,27 @@ MQTT（Message Queue Telemetry Transport）是一个轻量级开放的消息协�
 
 ## 实际完成功能
 
-### ping功能已实现 
+ping功能已实现 
 
-### connect功能已实现 
+connect功能已实现 
 
-### publish消息发送和转发功能已实现(尚未考虑转发时的断连问题)
+publish消息发送和转发功能已实现(尚未考虑转发时的断连问题)
 
-### publishAck功能已实现
+publishAck功能已实现
 
-### subscribe功能已实现
+subscribe功能已实现
 
-### subAck功能已实现
+subAck功能已实现
 
-### unsub和unsubAck已实现
+unsub和unsubAck已实现
 
-### Qos1级别的消息已实现
+Qos1级别的消息已实现
 
-### Broker作为接收端处理Qos2级别的消息-已实现
+Broker作为接收端处理Qos2级别的消息-已实现
 
-### Broker作为发送端处理Qos2级别的消息
+Broker作为发送端处理Qos2级别的消息
 
-
-### Qos2级别的消息已全部实现 
+Qos2级别的消息已全部实现 
 
 
 ## 关于mqtt协议Qos2服务质量等级
