@@ -17,7 +17,7 @@ public class CompellingUtil {
      * @param channel
      * @return
      */
-    public static String clientId(Channel channel) {
+    public static String getClientId(Channel channel) {
         return channel.attr(ChannelAttr.ATTR_KEY_CLIENTID).get();
     }
 }

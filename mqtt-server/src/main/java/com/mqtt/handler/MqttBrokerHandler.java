@@ -1,8 +1,10 @@
 package com.mqtt.handler;
 
 import com.alibaba.fastjson.JSONObject;
+import com.mqtt.common.ChannelAttr;
 import com.mqtt.config.UsernamePasswordAuth;
 import com.mqtt.model.ClientSubModel;
+import com.mqtt.utils.CompellingUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -40,9 +42,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
     private static final String ATTR_CONNECTION = "connectionList";
     private static final AttributeKey<Object> ATTR_KEY_CONNECTION = AttributeKey.valueOf(ATTR_CONNECTION);
 
-    //把连接的channel的clientId取出并放置到此channel的attach中
-    private static final String ATTR_CLIENTID = "ClientID";
-    private static final AttributeKey<String> ATTR_KEY_CLIENTID = AttributeKey.valueOf(ATTR_CLIENTID);
+
 
 
     private final static ConcurrentMap<String, Channel> pool = new ConcurrentHashMap<>();
@@ -189,7 +189,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         if(topics==null || topics.isEmpty()){
             ctx.close();
         }
-        Attribute<String> clientIdAttr = ctx.channel().attr(ATTR_KEY_CLIENTID);
+        Attribute<String> clientIdAttr = ctx.channel().attr(ChannelAttr.ATTR_KEY_CLIENTID);
         String clientId = clientIdAttr.get();
         topics.forEach(t->{
             List<ClientSubModel> subModelList = subQueue.get(t);
@@ -244,7 +244,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         //遍历
         Optional.ofNullable(mqttTopicSubscriptions).ifPresent(mts->{
             mqttTopicSubscriptions.forEach(sub->{
-                Attribute<String> clientId = ctx.channel().attr(ATTR_KEY_CLIENTID);
+                Attribute<String> clientId = ctx.channel().attr(ChannelAttr.ATTR_KEY_CLIENTID);
                 //record the client's subed topic queue
                 recordSubedTopicQueueForClient(clientId,sub);
                 List<ClientSubModel> subModelList = subQueue.get(sub.topicName());
@@ -300,7 +300,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
 
     private void deliveryRetainedPubMsgToSuber(ChannelHandlerContext ctx, MqttSubscribeMessage mqttMessage) {
         // detect if the topic exists a retained pub msg
-        Attribute<String> clientId = ctx.channel().attr(ATTR_KEY_CLIENTID);
+        Attribute<String> clientId = ctx.channel().attr(ChannelAttr.ATTR_KEY_CLIENTID);
         //
         List<String> topicList = clientSubedTopics.get(clientId.get());
         Optional.ofNullable(topicList).ifPresent(tl->{
@@ -323,7 +323,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         //2、理解关闭此连接
         //3、从连接列表中，移除此连接
         ctx.close();
-        String  clientId= (String) ctx.channel().attr(ATTR_KEY_CLIENTID).get();
+        String clientId = CompellingUtil.getClientId(ctx.channel());
         pool.remove(clientId);
     }
 
@@ -736,7 +736,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         //pool.putIfAbsent(connectPayload.clientIdentifier(),ctx.channel());
         pool.put(connectPayload.clientIdentifier(),ctx.channel());
         //把此连接的clientId放入到channel的attach中
-        ctx.channel().attr(ATTR_KEY_CLIENTID).set(connectPayload.clientIdentifier());
+        ctx.channel().attr(ChannelAttr.ATTR_KEY_CLIENTID).set(connectPayload.clientIdentifier());
         //1、从connectVariableHeader里读取 连接标志,共有6个连接标志
         //User Name Flag (1) 用户名标志
         //Password Flag (1) 密码标志
