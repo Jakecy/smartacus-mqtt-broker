@@ -1,6 +1,8 @@
 package com.mqtt.initializer;
 
+import com.mqtt.connection.ConnectionFactory;
 import com.mqtt.handler.MqttBrokerHandler;
+import com.mqtt.manager.SessionManager;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
@@ -17,6 +19,18 @@ import java.util.concurrent.TimeUnit;
  * @Note
  */
 public class MqttChannelChannelInitializer  extends ChannelInitializer {
+
+
+    private final SessionManager sessionManager;
+
+    private final ConnectionFactory connectionFactory;
+
+    public MqttChannelChannelInitializer(SessionManager sessionManager,ConnectionFactory connectionFactory) {
+        this.sessionManager = sessionManager;
+        this.connectionFactory=connectionFactory;
+    }
+
+
 
     @Override
     protected void initChannel(Channel channel) throws Exception {
