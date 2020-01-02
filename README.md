@@ -6,6 +6,8 @@
 
 ![M2M-IOT.jpg](https://upload-images.jianshu.io/upload_images/13084796-37b9c4763db0739a.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
+![smartacus-d32e5588af75d38f8b0720fc7523961c.jpg](https://upload-images.jianshu.io/upload_images/13084796-c3bd679152b1abff.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 随着工业的快速发展，对设备进行管理和数据采集的需求也越来越高。要解决大量设备的通信问题造就了
 物联网(IOT internet of Things)发展。
 
