@@ -4,6 +4,9 @@ import com.mqtt.manager.SessionManager;
 import io.netty.channel.Channel;
 import lombok.Data;
 
+import java.util.HashSet;
+import java.util.Set;
+
 
 /**
  * @Author: chihaojie
@@ -18,6 +21,8 @@ public class ClientConnection {
     private final Channel channel;
 
     private final SessionManager  sessionManager;
+
+    private Set<String> subTopic=new HashSet<String>();
 
     private Boolean connected;
 

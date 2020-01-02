@@ -19,6 +19,9 @@ public class ConnectionFactory {
 
     private static  final ConcurrentHashMap<String,ClientConnection> connectionFactory=new ConcurrentHashMap<>(1024);
 
+
+
+
     public    ClientConnection  create(Channel channel, SessionManager sessionManager) {
         ClientConnection  connection=new ClientConnection(channel,sessionManager);
         connectionFactory.put(channel.attr(ChannelAttr.ATTR_KEY_CLIENTID).get(),connection);
