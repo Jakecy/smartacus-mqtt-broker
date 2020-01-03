@@ -3,6 +3,7 @@ package com.mqtt.config;
 import com.mqtt.common.PropertiesUtil;
 import com.mqtt.common.SystemConstant;
 import io.netty.handler.codec.mqtt.MqttEncoder;
+import lombok.Data;
 
 import java.util.Properties;
 
@@ -12,6 +13,7 @@ import java.util.Properties;
  * @Version 1.0
  * @Note
  */
+@Data
 public class SystemConfiguration {
 
     private final String port;

@@ -1,6 +1,7 @@
 package com.mqtt;
 
 import com.alibaba.fastjson.JSONObject;
+import com.mqtt.config.SystemConfiguration;
 import com.mqtt.connection.ConnectionFactory;
 import com.mqtt.initializer.MqttChannelChannelInitializer;
 import com.mqtt.manager.SessionManager;
@@ -43,7 +44,8 @@ public class MqttServer {
                     //设置子Socket的keepalive时间
                     .childOption(ChannelOption.SO_KEEPALIVE,true);
             //绑定端口号
-            ChannelFuture cf = sboot.bind(18883).sync();
+            Integer port=Integer.valueOf(SystemConfiguration.INSTANCE.getPort());
+            ChannelFuture cf = sboot.bind(port).sync();
             System.out.println("Broker initiated...");
 
             cf.channel().closeFuture().sync();
