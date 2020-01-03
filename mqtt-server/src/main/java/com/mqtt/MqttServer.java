@@ -1,6 +1,6 @@
 package com.mqtt;
 
-import com.alibaba.fastjson.JSONObject;
+
 import com.mqtt.config.SystemConfiguration;
 import com.mqtt.connection.ConnectionFactory;
 import com.mqtt.initializer.MqttChannelChannelInitializer;
@@ -14,9 +14,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.InputStream;
-import java.util.Properties;
-import java.util.ResourceBundle;
+
 
 /**
  * @Author: chihaojie

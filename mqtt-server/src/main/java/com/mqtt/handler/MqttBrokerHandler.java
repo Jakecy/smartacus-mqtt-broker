@@ -51,8 +51,9 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
     private final AtomicInteger lastPacketId = new AtomicInteger(1);
 
     //创建一个订阅队列，
-    private final  static ConcurrentMap<String ,List<ClientSubModel>>  subQueue=new ConcurrentHashMap<>();
-
+    //每个主题对应的客户端
+    private final  static ConcurrentMap<String ,List<ClientSubModel>>  topicMapClient=new ConcurrentHashMap<>();
+    //每个客户端订阅的所有主题
     private final  static  ConcurrentMap<String ,List<String>>  clientSubedTopics=new ConcurrentHashMap<>();
 
     //retained msg Queue
@@ -212,7 +213,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         Attribute<String> clientIdAttr = ctx.channel().attr(ChannelAttributes.ATTR_KEY_CLIENTID);
         String clientId = clientIdAttr.get();
         topics.forEach(t->{
-            List<ClientSubModel> subModelList = subQueue.get(t);
+            List<ClientSubModel> subModelList = topicMapClient.get(t);
             if(subModelList!=null && !subModelList.isEmpty()){
                 //找到并移除
                 Integer index=null;
@@ -227,7 +228,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
                 }
             }
             //重新放入队列中
-            subQueue.put(t,subModelList);
+            topicMapClient.put(t,subModelList);
         });
 
         //构造报文
@@ -258,7 +259,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         List<MqttTopicSubscription> mqttTopicSubscriptions = subscribePayload.topicSubscriptions();
         //订阅队列的内容
         System.out.println("================订阅队列的内容================");
-        System.out.println(JSONObject.toJSONString(subQueue));
+        System.out.println(JSONObject.toJSONString(topicMapClient));
         //授予的权限值
         List<Integer>  grantedSubQos=new ArrayList<>(5);
         //遍历
@@ -267,7 +268,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
                 Attribute<String> clientId = ctx.channel().attr(ChannelAttributes.ATTR_KEY_CLIENTID);
                 //record the client's subed topic queue
                 recordSubedTopicQueueForClient(clientId,sub);
-                List<ClientSubModel> subModelList = subQueue.get(sub.topicName());
+                List<ClientSubModel> subModelList = topicMapClient.get(sub.topicName());
                 System.out.println("==============主题："+sub.topicName()+"的订阅列表==========");
                 System.out.println(JSONObject.toJSONString(subModelList));
                 grantedSubQos.add(sub.qualityOfService().value());
@@ -279,9 +280,9 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
                     csm.setSubTopic(sub.topicName());
                     csm.setSubQos(sub.qualityOfService());
                     subModelList.add(csm);
-                    subQueue.put(sub.topicName(),subModelList);
+                    topicMapClient.put(sub.topicName(),subModelList);
                 }else {
-                    List<ClientSubModel> oldTopicSub = subQueue.get(sub.topicName());
+                    List<ClientSubModel> oldTopicSub = topicMapClient.get(sub.topicName());
                     System.out.println("==============老主题："+sub.topicName()+"的订阅列表==========");
                     System.out.println(JSONObject.toJSONString(oldTopicSub));
                     //新加入
@@ -290,7 +291,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
                     csm.setSubTopic(sub.topicName());
                     csm.setSubQos(sub.qualityOfService());
                     subModelList.add(csm);
-                    subQueue.put(sub.topicName(),subModelList);
+                    topicMapClient.put(sub.topicName(),subModelList);
 
                 }
             });
@@ -626,18 +627,21 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
     private void handleQos0PubMsg(ChannelHandlerContext ctx, MqttPublishMessage pubMsg) {
         System.out.println("=============处理Qos0的消息==============");
         System.out.println(JSONObject.toJSONString(connectionFactory));
-        Channel targetChannel = connectionFactory.getConnection(pubMsg.variableHeader().topicName()).getChannel();
-        System.out.println(JSONObject.toJSONString(targetChannel));
-        Optional.ofNullable(targetChannel).ifPresent(tc->{
-            MqttFixedHeader pubFixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false,
-                    MqttQoS.AT_LEAST_ONCE, true, 0);
-            MqttPublishVariableHeader publishVariableHeader=new MqttPublishVariableHeader(pubMsg.variableHeader().topicName(),lastPacketId.intValue());
-            MqttPublishMessage  pubMsg2=new MqttPublishMessage(pubFixedHeader,publishVariableHeader,pubMsg.payload());
-            targetChannel.writeAndFlush(pubMsg2);
-            System.out.println("==============Qos0转发消息===========");
-            System.out.println(pubMsg2);
+        String dstTopic=pubMsg.variableHeader().topicName();
+        List<ClientSubModel> clientSubModels = topicMapClient.get(dstTopic);
+        clientSubModels.forEach(client->{
+            Channel targetChannel = connectionFactory.getConnection(client.getClientId()).getChannel();
+            System.out.println(JSONObject.toJSONString(targetChannel));
+            Optional.ofNullable(targetChannel).ifPresent(tc->{
+                MqttFixedHeader pubFixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false,
+                        MqttQoS.AT_LEAST_ONCE, true, 0);
+                MqttPublishVariableHeader publishVariableHeader=new MqttPublishVariableHeader(pubMsg.variableHeader().topicName(),lastPacketId.intValue());
+                MqttPublishMessage  pubMsg2=new MqttPublishMessage(pubFixedHeader,publishVariableHeader,pubMsg.payload());
+                targetChannel.writeAndFlush(pubMsg2);
+                System.out.println("==============Qos0转发消息===========");
+                System.out.println(pubMsg2);
+            });
         });
-
     }
 
     private void handleQos1PubMsg(ChannelHandlerContext ctx, MqttPublishMessage pubMsg) {
@@ -653,22 +657,25 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         System.out.println("=============池中的链接有==============");
         System.out.println(JSONObject.toJSONString(connectionFactory));
         System.out.println("==============publish消息的topic是===========");
-        System.out.println(pubMsg.variableHeader().topicName());
-        Channel targetChannel = connectionFactory.getConnection(pubMsg.variableHeader().topicName()).getChannel();
-        System.out.println("================处理publish消息,转发===========");
-        System.out.println("============目标channel===========");
-        System.out.println(JSONObject.toJSONString(targetChannel));
-        Optional.ofNullable(targetChannel).ifPresent(tc->{
-            MqttFixedHeader pubFixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false,
-                    MqttQoS.AT_LEAST_ONCE, true, 0);
-            MqttPublishVariableHeader publishVariableHeader=new MqttPublishVariableHeader(pubMsg.variableHeader().topicName(),lastPacketId.intValue());
-            MqttPublishMessage  pubMsg2=new MqttPublishMessage(pubFixedHeader,publishVariableHeader,pubMsg.payload());
-            targetChannel.writeAndFlush(pubMsg2);
-            //把此消息放入待确认队列中
-            if(pubMsg2.fixedHeader().qosLevel().equals(MqttQoS.AT_LEAST_ONCE)){
-                pendingAckPubMsgs.offer(pubMsg2);
-            }
+        String dstTopic=pubMsg.variableHeader().topicName();
+        List<ClientSubModel> clientSubModels = topicMapClient.get(dstTopic);
+        clientSubModels.forEach(client->{
+            Channel targetChannel = connectionFactory.getConnection(client.getClientId()).getChannel();
+            System.out.println("================处理publish消息,转发===========");
+            System.out.println("============目标channel===========");
+            System.out.println(JSONObject.toJSONString(targetChannel));
+            Optional.ofNullable(targetChannel).ifPresent(tc->{
+                MqttFixedHeader pubFixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false,
+                        MqttQoS.AT_LEAST_ONCE, true, 0);
+                MqttPublishVariableHeader publishVariableHeader=new MqttPublishVariableHeader(pubMsg.variableHeader().topicName(),lastPacketId.intValue());
+                MqttPublishMessage  pubMsg2=new MqttPublishMessage(pubFixedHeader,publishVariableHeader,pubMsg.payload());
+                targetChannel.writeAndFlush(pubMsg2);
+                //把此消息放入待确认队列中
+                if(pubMsg2.fixedHeader().qosLevel().equals(MqttQoS.AT_LEAST_ONCE)){
+                    pendingAckPubMsgs.offer(pubMsg2);
+                }
 
+            });
         });
         System.out.println("=====================待确认pub消息队列=======================");
         System.out.println(JSONObject.toJSONString(pendingAckPubMsgs));
