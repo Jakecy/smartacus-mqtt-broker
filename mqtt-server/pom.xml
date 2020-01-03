@@ -124,7 +124,9 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>lib/</classpathPrefix>
+                            <mainClass>com.mqtt.MqttServer</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
