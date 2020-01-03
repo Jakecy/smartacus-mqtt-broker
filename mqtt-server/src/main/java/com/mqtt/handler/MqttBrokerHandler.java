@@ -31,6 +31,20 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static io.netty.handler.codec.mqtt.MqttMessageIdVariableHeader.from;
 
 /**
+ * 待处理错误：
+ * https://my.oschina.net/LucasZhu/blog/1799075
+ *
+ * io.netty.util.IllegalReferenceCountException: refCnt: 0
+ *         at io.netty.handler.codec.mqtt.MqttPublishMessage.content(MqttPublishMessage.java:49)
+ *         at io.netty.handler.codec.mqtt.MqttPublishMessage.payload(MqttPublishMessage.java:42)
+ *         at com.mqtt.handler.MqttBrokerHandler.lambda$null$19(MqttBrokerHandler.java:681)
+ *         at java.util.Optional.ifPresent(Optional.java:159)
+ *         at com.mqtt.handler.MqttBrokerHandler.lambda$handleQos1PubMsg$20(MqttBrokerHandler.java:677)
+ */
+
+
+
+/**
  * @Author: chihaojie
  * @Date: 2020/1/1 12:47
  * @Version 1.0
