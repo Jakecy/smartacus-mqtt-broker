@@ -61,7 +61,9 @@ public class MqttServer {
     }
 
     public static void main(String[] args) throws Exception{
+        logger.info("【Mqtt Broker  Server Start Ok】");
         MqttServer mqttServer = new MqttServer();
         mqttServer.run();
+
     }
 }

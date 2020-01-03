@@ -8,5 +8,5 @@ package com.mqtt.common;
  */
 public interface SystemConstant {
 
-    String  configFileName="config.properties";
+    String  configFileName= "config.properties";
 }

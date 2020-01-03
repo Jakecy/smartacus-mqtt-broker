@@ -1,6 +1,9 @@
-package com.mqtt.common;
+package com.mqtt.utils;
 
 import com.alibaba.fastjson.JSONObject;
+import com.mqtt.MqttServer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.util.Properties;
@@ -14,6 +17,8 @@ import java.util.ResourceBundle;
  */
 public class PropertiesUtil {
 
+    private static final Logger logger = LoggerFactory.getLogger(PropertiesUtil.class);
+
     public static final Properties  load(String configfileName){
         try{
             Properties props = new Properties();
@@ -24,7 +29,7 @@ public class PropertiesUtil {
             System.out.println(JSONObject.toJSONString(props));
             return props;
         }catch (Exception e){
-            e.printStackTrace();
+            logger.error("【failed to read properties from config file】 , exception happened : {}",e.getStackTrace());
         }
        return null;
     }

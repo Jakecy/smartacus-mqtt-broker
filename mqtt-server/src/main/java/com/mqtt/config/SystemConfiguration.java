@@ -1,8 +1,7 @@
 package com.mqtt.config;
 
-import com.mqtt.common.PropertiesUtil;
+import com.mqtt.utils.PropertiesUtil;
 import com.mqtt.common.SystemConstant;
-import io.netty.handler.codec.mqtt.MqttEncoder;
 import lombok.Data;
 
 import java.util.Properties;
