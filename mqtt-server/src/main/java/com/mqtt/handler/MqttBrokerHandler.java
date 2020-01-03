@@ -665,14 +665,6 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void handleQos1PubMsg(ChannelHandlerContext ctx, MqttPublishMessage pubMsg) {
-        //写回一个publishAck
-        MqttFixedHeader pubAckFixedHeader = new MqttFixedHeader(MqttMessageType.PUBACK, false,
-                MqttQoS.AT_MOST_ONCE, false, 0);
-        MqttMessageIdVariableHeader variableHeader =MqttMessageIdVariableHeader.from(lastPacketId.get()) ;//MqttMessageIdVariableHeader.from(mqttMessage.variableHeader().packetId());
-        ByteBuf payload = Unpooled.buffer(200);
-        payload.writeBytes("服务端发送的响应测试消息".getBytes());
-        MqttPubAckMessage    pubAck=  new MqttPubAckMessage(pubAckFixedHeader, variableHeader);
-        ctx.writeAndFlush(pubAck);
         //取出publish消息
         System.out.println("=============池中的链接有==============");
         System.out.println(JSONObject.toJSONString(connectionFactory));
@@ -701,6 +693,14 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
 
             });
         });
+        //写回一个publishAck
+        MqttFixedHeader pubAckFixedHeader = new MqttFixedHeader(MqttMessageType.PUBACK, false,
+                MqttQoS.AT_MOST_ONCE, false, 0);
+        MqttMessageIdVariableHeader variableHeader =MqttMessageIdVariableHeader.from(lastPacketId.get()) ;//MqttMessageIdVariableHeader.from(mqttMessage.variableHeader().packetId());
+        ByteBuf payload = Unpooled.buffer(200);
+        payload.writeBytes("服务端发送的响应测试消息".getBytes());
+        MqttPubAckMessage    pubAck=  new MqttPubAckMessage(pubAckFixedHeader, variableHeader);
+        ctx.writeAndFlush(pubAck);
         System.out.println("=====================待确认pub消息队列=======================");
         System.out.println(JSONObject.toJSONString(pendingAckPubMsgs));
         EventLoop loop =ctx.channel().eventLoop();
