@@ -117,6 +117,11 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
      */
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object o) throws Exception {
+        //判断是否是mqtt协议
+        if(!(o instanceof MqttMessage)){
+            ctx.close();
+            return;
+        }
         MqttMessage mqttMessage = (MqttMessage) o;
         switch (mqttMessage.fixedHeader().messageType()) {
             case CONNECT:
@@ -758,6 +763,8 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         //pool.putIfAbsent(connectPayload.clientIdentifier(),ctx.channel());
         //TODO 群组划分
         String clientId=connectPayload.clientIdentifier();
+        System.out.println("==========新来连接的clientId================");
+        System.out.println(clientId);
         if(clientId.contains("-")){
             System.out.println("============clientId中含有-===============");
         }else {
