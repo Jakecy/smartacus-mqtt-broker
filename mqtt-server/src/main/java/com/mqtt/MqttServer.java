@@ -54,17 +54,7 @@ public class MqttServer {
     }
 
     public static void main(String[] args) throws Exception{
-        String configFileName="config.properties";
-        Properties props = new Properties();
-        ResourceBundle rb = ResourceBundle.getBundle("config");
-        //加载配置文件
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        InputStream is = loader.getResourceAsStream(configFileName);
-        props.load(is);
-        System.out.println(JSONObject.toJSONString(props));
-        System.out.println(props.getProperty("port"));
-        //MqttServer mqttServer = new MqttServer();
-        //mqttServer.run();
-
+        MqttServer mqttServer = new MqttServer();
+        mqttServer.run();
     }
 }
