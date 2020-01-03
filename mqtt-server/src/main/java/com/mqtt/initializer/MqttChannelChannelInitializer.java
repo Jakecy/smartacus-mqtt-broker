@@ -45,7 +45,7 @@ public class MqttChannelChannelInitializer  extends ChannelInitializer {
         //3、把netty提供的心跳handler加入到pipeline
         //IdleStateHandler(long readerIdleTime, long writerIdleTime, long allIdleTime, TimeUnit unit)
         //30s没有入站消息，则：关闭此连接。 同时，每隔5秒发送一次ping。
-        pipeline.addLast("heartbeatHandler",new IdleStateHandler(50,30,0,TimeUnit.SECONDS));
+        pipeline.addLast("heartbeatHandler",new IdleStateHandler(20,30,0,TimeUnit.SECONDS));
         //4、把自己的handler加入到管道的末端
         //channel.pipeline().addLast("mqttPingHandler", new MqttPingHandler(5));//定义keepalive时间为5s
         pipeline.addLast("brokerHandler",new MqttBrokerHandler(sessionManager,connectionFactory));

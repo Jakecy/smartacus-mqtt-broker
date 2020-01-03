@@ -54,7 +54,8 @@ public class MqttPingHandler extends ChannelInboundHandlerAdapter {
             IdleStateEvent event = (IdleStateEvent) evt;
             switch(event.state()){
                 case READER_IDLE:
-                    this.handlePingReq(ctx.channel());
+                    ctx.close();//读超时的时候，就断连
+                    //this.handlePingReq(ctx.channel());
                     break;
                 case WRITER_IDLE:
                     this.sendPingReq(ctx.channel());
