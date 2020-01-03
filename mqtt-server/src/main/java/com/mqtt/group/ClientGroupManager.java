@@ -17,6 +17,12 @@ public class ClientGroupManager {
     public  static final ConcurrentHashMap<String,ClientGroup>  group=new ConcurrentHashMap<>(64);
 
 
+
+    public static  ClientGroup  getMember(String groupId){
+        return group.get(groupId);
+    }
+
+
     /**
      * 向组内添加成员
      */
@@ -29,6 +35,17 @@ public class ClientGroupManager {
      */
     public static void removeMemeber(ClientGroup  clientGroup){
         group.remove(clientGroup.groupId);
+    }
+
+    /**
+     * 判断当前组是否已存在
+     */
+    public  static  boolean  exists(String groupId){
+        if(group.containsKey(groupId)){
+            return  true;
+        }else {
+            return  false;
+        }
     }
 
 

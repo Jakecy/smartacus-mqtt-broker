@@ -4,9 +4,12 @@ import com.alibaba.fastjson.JSONObject;
 import com.mqtt.common.ChannelAttributes;
 import com.mqtt.config.UsernamePasswordAuth;
 import com.mqtt.connection.ConnectionFactory;
+import com.mqtt.group.ClientGroup;
+import com.mqtt.group.ClientGroupManager;
 import com.mqtt.manager.SessionManager;
 import com.mqtt.message.ClientSubModel;
 import com.mqtt.utils.CompellingUtil;
+import com.mqtt.utils.StrUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
@@ -18,10 +21,7 @@ import io.netty.util.AttributeKey;
 import io.netty.util.CharsetUtil;
 import io.netty.util.ReferenceCountUtil;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
@@ -160,7 +160,11 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
     }
 
 
-
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        //super.channelInactive(ctx);
+        System.out.println("=============测试Inactive方法==============");
+    }
 
     private void handleClientPubAckMessage(ChannelHandlerContext ctx, MqttPubAckMessage mqttMessage) {
         //处理确认消息
@@ -740,6 +744,29 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         System.out.println(JSONObject.toJSONString(connectionFactory));
         System.out.println(connectPayload.clientIdentifier());
         //pool.putIfAbsent(connectPayload.clientIdentifier(),ctx.channel());
+        //TODO 群组划分
+        String clientId=connectPayload.clientIdentifier();
+        if(clientId.contains("-")){
+            System.out.println("============clientId中含有-===============");
+        }else {
+            System.out.println("============clientId中没有-===============");
+        }
+        //群组划分
+        String[] spiltArray = StrUtil.spilt(connectPayload.clientIdentifier(), "-");
+        System.out.println("===============切割后===============");
+        System.out.println(spiltArray);
+        String groupId=spiltArray[0];
+        if(ClientGroupManager.exists(groupId)){
+            ClientGroup clientGroup = ClientGroupManager.getMember(groupId);
+            clientGroup.getClients().put(clientId,ctx.channel());
+        }else {
+            ClientGroup clientGroup=new ClientGroup();
+            clientGroup.setGroupId(groupId);
+            clientGroup.getClients().put(clientId,ctx.channel());
+            ClientGroupManager.putMemeber(clientGroup);
+        }
+        System.out.println("=================组内成员======================");
+        System.out.println(JSONObject.toJSONString(ClientGroupManager.group));
         ctx.channel().attr(ChannelAttributes.ATTR_KEY_CLIENTID).set(connectPayload.clientIdentifier());
         connectionFactory.create(ctx.channel(),sessionManager);
         //connectionFactory.pu(CompellingUtil.getClientId(ctx.channel()),connectionFactory.create(ctx.channel(),sessionManager));

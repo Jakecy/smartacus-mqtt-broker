@@ -24,9 +24,7 @@ public class ClientGroup {
   public  String  ON_LINE_TOPIC="ON_LINE_TOPIC";
 
   public  String  OFF_LINE_TOPIC="OFF_LINE_TOPIC";
-    //组内成员
-  public ConcurrentLinkedQueue<ClientConnection>  groupMem=new ConcurrentLinkedQueue<>();
 
-  public ConcurrentHashMap<String,Channel>  clientGroup=new ConcurrentHashMap<>(64);
+  public ConcurrentHashMap<String,Channel>  clients=new ConcurrentHashMap<>(64);
 
 }
