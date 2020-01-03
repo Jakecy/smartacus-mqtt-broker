@@ -35,17 +35,6 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-mongodb</artifactId>
         </dependency>-->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.7.7</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/org.slf4j/log4j-over-slf4j -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>log4j-over-slf4j</artifactId>
-            <version>1.7.30</version>
-        </dependency>
         <!--fastjson依赖添加-->
         <dependency>
             <groupId>com.alibaba</groupId>
@@ -64,6 +53,48 @@
             <artifactId>lombok</artifactId>
             <version>1.16.20</version>
             <scope>provided</scope>
+        </dependency>
+        <!--引进slf4j和log4j2的依赖-->
+        <!-- slf4j核心包-->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.25</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <version>1.7.25</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!--log4j2核心包-->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.8.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>2.8.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
+            <version>2.8.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-web</artifactId>
+            <version>2.8.2</version>
+            <scope>runtime</scope>
+        </dependency>
+        <!--log4j2 异步依赖-->
+        <dependency>
+            <groupId>com.lmax</groupId>
+            <artifactId>disruptor</artifactId>
+            <version>3.3.6</version>
         </dependency>
     </dependencies>
 

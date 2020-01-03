@@ -11,6 +11,8 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.util.Properties;
@@ -23,6 +25,9 @@ import java.util.ResourceBundle;
  * @Note
  */
 public class MqttServer {
+
+
+    private static final Logger logger = LoggerFactory.getLogger(MqttServer.class);
 
     public MqttServer() {
     }
