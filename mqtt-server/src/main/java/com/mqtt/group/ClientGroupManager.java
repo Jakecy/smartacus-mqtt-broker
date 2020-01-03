@@ -1,7 +1,13 @@
 package com.mqtt.group;
 
+import com.alibaba.fastjson.JSONObject;
 import com.mqtt.connection.ClientConnection;
+import com.mqtt.utils.CompellingUtil;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
+import io.netty.handler.codec.mqtt.*;
+import lombok.Data;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -12,6 +18,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * @Version 1.0
  * @Note  群组管理器
  */
+@Data
 public class ClientGroupManager {
 
     public  static final ConcurrentHashMap<String,ClientGroup>  group=new ConcurrentHashMap<>(64);
@@ -49,11 +56,37 @@ public class ClientGroupManager {
     }
 
 
+    public static void putOfflineSubToClientGroup(Channel channel){
+        String groupId = CompellingUtil.getGroupId(channel);
+        String clientId = CompellingUtil.getClientId(channel);
+        ClientGroup clientGroup = group.get(groupId);
+        clientGroup.subOfflineClients.put(clientId,channel);
+        System.out.println("=========下线订阅群组=============");
+        System.out.println(JSONObject.toJSONString(clientGroup.subOfflineClients));
+    }
+
     /**
      * 群发消息
      */
-    public static  void  sendGroupMessage(){
+    public static  void  sendOnlineGroupMessage(String groupId){
         //
+    }
+
+    public static  void  sendOffLineGroupMessage(String groupId){
+        ClientGroup clientGroup = group.get(groupId);
+        ConcurrentHashMap<String, Channel> clients = clientGroup.subOfflineClients;
+        clients.forEach((K,V)->{
+            MqttFixedHeader pubFixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false,
+                    MqttQoS.AT_MOST_ONCE, false, 0);
+            MqttPublishVariableHeader publishVariableHeader=new MqttPublishVariableHeader(clientGroup.offLineTopic,1);
+            ByteBuf payload = Unpooled.buffer(200);
+            payload.writeBytes("下线消息".getBytes());
+            MqttPublishMessage pubMsg=new MqttPublishMessage(pubFixedHeader,publishVariableHeader,payload);
+            V.writeAndFlush(pubMsg);
+            System.out.println("=============群发下线消息===============");
+        });
+
+
     }
 
 }

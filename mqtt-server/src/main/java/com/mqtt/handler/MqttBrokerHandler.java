@@ -164,6 +164,12 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         //super.channelInactive(ctx);
         System.out.println("=============测试Inactive方法==============");
+        //判断当前连接所属的群组
+        //对该群组成员发送下线消息
+        String clientId = CompellingUtil.getClientId(ctx.channel());
+        String groupId = CompellingUtil.getGroupId(ctx.channel());
+        //群发下线消息
+        ClientGroupManager.sendOffLineGroupMessage(groupId);
     }
 
     private void handleClientPubAckMessage(ChannelHandlerContext ctx, MqttPubAckMessage mqttMessage) {
@@ -281,6 +287,12 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
                     subModelList.add(csm);
                     subQueue.put(sub.topicName(),subModelList);
 
+                }
+            });
+            //TODO 上下线TOPIC单独处理
+            mqttTopicSubscriptions.forEach((sub)->{
+                if(sub.topicName().equals("OFF_LINE_TOPIC")){
+                   ClientGroupManager.putOfflineSubToClientGroup(ctx.channel());
                 }
             });
             //发送subAck响应

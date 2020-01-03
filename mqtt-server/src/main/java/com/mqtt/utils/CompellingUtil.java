@@ -20,4 +20,12 @@ public class CompellingUtil {
     public static String getClientId(Channel channel) {
         return channel.attr(ChannelAttributes.ATTR_KEY_CLIENTID).get();
     }
+
+    public static  String  getGroupId(Channel channel){
+        String clientId=channel.attr(ChannelAttributes.ATTR_KEY_CLIENTID).get();
+        //群组划分
+        String[] spiltArray = StrUtil.spilt(clientId, "-");
+        String groupId=spiltArray[0];
+        return groupId;
+    }
 }
