@@ -629,6 +629,9 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         System.out.println(JSONObject.toJSONString(connectionFactory));
         String dstTopic=pubMsg.variableHeader().topicName();
         List<ClientSubModel> clientSubModels = topicMapClient.get(dstTopic);
+        if(clientSubModels.isEmpty()){
+            return;
+        }
         clientSubModels.forEach(client->{
             Channel targetChannel = connectionFactory.getConnection(client.getClientId()).getChannel();
             System.out.println(JSONObject.toJSONString(targetChannel));
@@ -662,6 +665,9 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         System.out.println("==============publish消息的topic是===========");
         String dstTopic=pubMsg.variableHeader().topicName();
         List<ClientSubModel> clientSubModels = topicMapClient.get(dstTopic);
+        if(clientSubModels.isEmpty()){
+            return;
+        }
         clientSubModels.forEach(client->{
             Channel targetChannel = connectionFactory.getConnection(client.getClientId()).getChannel();
             if(targetChannel==null){
