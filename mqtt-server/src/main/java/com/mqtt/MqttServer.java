@@ -1,5 +1,6 @@
 package com.mqtt;
 
+import com.alibaba.fastjson.JSONObject;
 import com.mqtt.connection.ConnectionFactory;
 import com.mqtt.initializer.MqttChannelChannelInitializer;
 import com.mqtt.manager.SessionManager;
@@ -9,6 +10,10 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+
+import java.io.InputStream;
+import java.util.Properties;
+import java.util.ResourceBundle;
 
 /**
  * @Author: chihaojie
@@ -49,9 +54,17 @@ public class MqttServer {
     }
 
     public static void main(String[] args) throws Exception{
-        //
-        MqttServer mqttServer = new MqttServer();
-        mqttServer.run();
+        String configFileName="config.properties";
+        Properties props = new Properties();
+        ResourceBundle rb = ResourceBundle.getBundle("config");
+        //加载配置文件
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        InputStream is = loader.getResourceAsStream(configFileName);
+        props.load(is);
+        System.out.println(JSONObject.toJSONString(props));
+        System.out.println(props.getProperty("port"));
+        //MqttServer mqttServer = new MqttServer();
+        //mqttServer.run();
 
     }
 }
