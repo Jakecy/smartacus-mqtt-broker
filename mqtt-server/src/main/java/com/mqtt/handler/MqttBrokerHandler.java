@@ -632,6 +632,9 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         clientSubModels.forEach(client->{
             Channel targetChannel = connectionFactory.getConnection(client.getClientId()).getChannel();
             System.out.println(JSONObject.toJSONString(targetChannel));
+            if(targetChannel==null){
+                return;
+            }
             Optional.ofNullable(targetChannel).ifPresent(tc->{
                 MqttFixedHeader pubFixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false,
                         MqttQoS.AT_LEAST_ONCE, true, 0);
@@ -661,8 +664,9 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         List<ClientSubModel> clientSubModels = topicMapClient.get(dstTopic);
         clientSubModels.forEach(client->{
             Channel targetChannel = connectionFactory.getConnection(client.getClientId()).getChannel();
-            System.out.println("================处理publish消息,转发===========");
-            System.out.println("============目标channel===========");
+            if(targetChannel==null){
+                return;
+            }
             System.out.println(JSONObject.toJSONString(targetChannel));
             Optional.ofNullable(targetChannel).ifPresent(tc->{
                 MqttFixedHeader pubFixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false,
