@@ -74,17 +74,20 @@ public class ClientGroupManager {
 
     public static  void  sendOffLineGroupMessage(String groupId){
         ClientGroup clientGroup = group.get(groupId);
-        ConcurrentHashMap<String, Channel> clients = clientGroup.subOfflineClients;
-        clients.forEach((K,V)->{
-            MqttFixedHeader pubFixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false,
-                    MqttQoS.AT_MOST_ONCE, false, 0);
-            MqttPublishVariableHeader publishVariableHeader=new MqttPublishVariableHeader(clientGroup.offLineTopic,1);
-            ByteBuf payload = Unpooled.buffer(200);
-            payload.writeBytes("下线消息".getBytes());
-            MqttPublishMessage pubMsg=new MqttPublishMessage(pubFixedHeader,publishVariableHeader,payload);
-            V.writeAndFlush(pubMsg);
-            System.out.println("=============群发下线消息===============");
-        });
+        if(clientGroup!=null){
+            ConcurrentHashMap<String, Channel> clients = clientGroup.subOfflineClients;
+            clients.forEach((K,V)->{
+                MqttFixedHeader pubFixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false,
+                        MqttQoS.AT_MOST_ONCE, false, 0);
+                MqttPublishVariableHeader publishVariableHeader=new MqttPublishVariableHeader(clientGroup.offLineTopic,1);
+                ByteBuf payload = Unpooled.buffer(200);
+                payload.writeBytes("下线消息".getBytes());
+                MqttPublishMessage pubMsg=new MqttPublishMessage(pubFixedHeader,publishVariableHeader,payload);
+                V.writeAndFlush(pubMsg);
+                System.out.println("=============群发下线消息===============");
+            });
+        }
+
 
 
     }
