@@ -3,6 +3,7 @@ package com.mqtt.handler;
 import com.alibaba.fastjson.JSONObject;
 import com.mqtt.common.ChannelAttributes;
 import com.mqtt.config.UsernamePasswordAuth;
+import com.mqtt.connection.ClientConnection;
 import com.mqtt.connection.ConnectionFactory;
 import com.mqtt.group.ClientGroup;
 import com.mqtt.group.ClientGroupManager;
@@ -28,6 +29,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static io.netty.channel.ChannelFutureListener.CLOSE_ON_FAILURE;
 import static io.netty.handler.codec.mqtt.MqttMessageIdVariableHeader.from;
 
 /**
@@ -893,11 +895,20 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
             //如果发送读空闲的话，就发送一个ping消息，如果5秒内接收不到回复，就关闭连接
             IdleStateEvent  idleEvent=(IdleStateEvent)evt;
             if(idleEvent.state().equals(IdleState.READER_IDLE)){
-                System.out.println("..........readerIdleTimeOut,will close the channel ...... ");
-                ctx.close();
+                System.out.println("..........readerIdleTimeOut,first try ping ,then wait ,finnally  will close the channel ...... ");
+                System.out.println("===========读空闲时，主动发送ping报文，探测连接的活性===========");
+                this.sendPingReq(ctx.channel());
+                ctx.channel().eventLoop().schedule(()->{
+                    ClientConnection connection = connectionFactory.getConnection(CompellingUtil.getClientId(ctx.channel()));
+                    if(connection!=null){
+                        Long interval=(connection.getSendMessageLastestTime()-System.currentTimeMillis())/1000;
+                        if(interval>5){
+                            ctx.close().addListener(CLOSE_ON_FAILURE);
+                        }                        }
+                    //ctx.close().addListener(CLOSE_ON_FAILURE);
+                },5,TimeUnit.SECONDS);
             }else if(idleEvent.state().equals(IdleState.WRITER_IDLE)) {
                 //当写空闲时，就发送ping消息给对端
-                //
                 MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PINGREQ, false, MqttQoS.AT_MOST_ONCE, false, 0);
                 ctx.writeAndFlush(new MqttMessage(fixedHeader));
             }
