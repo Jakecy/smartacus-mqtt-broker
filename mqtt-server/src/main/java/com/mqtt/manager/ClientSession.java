@@ -2,6 +2,8 @@ package com.mqtt.manager;
 
 import lombok.Data;
 
+import java.util.Date;
+
 /**
  * @Author: chihaojie
  * @Date: 2019/12/30 14:50
@@ -17,6 +19,13 @@ import lombok.Data;
 public class ClientSession {
 
     private String clientId;
+
+
+    private Long  sendMessageLastestTime; //接收最近一次报文的时间
+
+
+
+
 
 
 

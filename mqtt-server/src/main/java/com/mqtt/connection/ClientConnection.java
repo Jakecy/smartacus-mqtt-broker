@@ -1,6 +1,7 @@
 package com.mqtt.connection;
 
 import com.mqtt.manager.SessionManager;
+import com.mqtt.utils.DateUtil;
 import io.netty.channel.Channel;
 import lombok.Data;
 
@@ -26,8 +27,11 @@ public class ClientConnection {
 
     private Boolean connected;
 
+    private Long  sendMessageLastestTime; //接收最近一次报文的时间
+
     public ClientConnection(Channel channel, SessionManager sessionManager) {
         this.channel = channel;
         this.sessionManager = sessionManager;
+        this.sendMessageLastestTime=DateUtil.nowTime();
     }
 }

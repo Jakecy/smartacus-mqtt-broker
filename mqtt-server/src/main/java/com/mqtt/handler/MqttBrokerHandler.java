@@ -170,6 +170,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
                 handleClientDisconnectMessage(ctx,mqttMessage);
                 break;
             default:
+                System.out.println("=============收到非Mqtt===========");
                 System.out.println("Unexpected message type: " + mqttMessage.fixedHeader().messageType());
                 ReferenceCountUtil.release(mqttMessage);
                 ctx.close();//这句话会把同client端建立的socket关闭

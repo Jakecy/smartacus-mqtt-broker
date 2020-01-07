@@ -1,5 +1,9 @@
 package com.mqtt.handler;
 
+import com.mqtt.connection.ClientConnection;
+import com.mqtt.connection.ConnectionFactory;
+import com.mqtt.manager.SessionManager;
+import com.mqtt.utils.CompellingUtil;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -10,6 +14,10 @@ import io.netty.handler.codec.mqtt.MqttQoS;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.ScheduledFuture;
+
+import java.util.concurrent.TimeUnit;
+
+import static io.netty.channel.ChannelFutureListener.CLOSE_ON_FAILURE;
 
 /**
  * @Author: chihaojie
@@ -24,14 +32,22 @@ public class MqttPingHandler extends ChannelInboundHandlerAdapter {
     //等待ping的超时时间
     private ScheduledFuture<?> pingRespTimeout;
 
-    public MqttPingHandler(int keepaliveSeconds) {
+    private final SessionManager sessionManager;
+
+    private final ConnectionFactory connectionFactory;
+
+    public MqttPingHandler(SessionManager sessionManager,ConnectionFactory connectionFactory,int keepaliveSeconds) {
         this.keepaliveSeconds = keepaliveSeconds;
+        this.sessionManager=sessionManager;
+        this.connectionFactory=connectionFactory;
     }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (!(msg instanceof MqttMessage)) {
+            System.out.println("=============收到非Mqtt===========");
             ctx.fireChannelRead(msg);
+            ctx.close();
             return;
         }
         MqttMessage message = (MqttMessage) msg;
@@ -54,8 +70,17 @@ public class MqttPingHandler extends ChannelInboundHandlerAdapter {
             IdleStateEvent event = (IdleStateEvent) evt;
             switch(event.state()){
                 case READER_IDLE:
-                    ctx.close();//读超时的时候，就断连
-                    //this.handlePingReq(ctx.channel());
+                    System.out.println("===========读空闲时，主动发送ping报文，探测连接的活性===========");
+                    this.sendPingReq(ctx.channel());
+                    ctx.channel().eventLoop().schedule(()->{
+                        ClientConnection connection = connectionFactory.getConnection(CompellingUtil.getClientId(ctx.channel()));
+                        if(connection!=null){
+                          Long interval=(connection.getSendMessageLastestTime()-System.currentTimeMillis())/1000;
+                          if(interval>5){
+                              ctx.close().addListener(CLOSE_ON_FAILURE);
+                          }                        }
+                        //ctx.close().addListener(CLOSE_ON_FAILURE);
+                    },5,TimeUnit.SECONDS);
                     break;
                 case WRITER_IDLE:
                     this.sendPingReq(ctx.channel());

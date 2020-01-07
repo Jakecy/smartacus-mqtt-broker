@@ -7,6 +7,7 @@ import com.mqtt.initializer.MqttChannelChannelInitializer;
 import com.mqtt.manager.SessionManager;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -50,7 +51,12 @@ public class MqttServer {
             Integer port=Integer.valueOf(SystemConfiguration.INSTANCE.getPort());
             ChannelFuture cf = sboot.bind(port).sync();
             System.out.println("Broker initiated...");
-
+            sboot.bind(port).addListeners(new ChannelFutureListener() {
+                @Override
+                public void operationComplete(ChannelFuture future) throws Exception {
+                    System.out.println("=========异步绑定完成==============");
+                }
+            });
             cf.channel().closeFuture().sync();
         }finally {
             workerGroup.shutdownGracefully();
