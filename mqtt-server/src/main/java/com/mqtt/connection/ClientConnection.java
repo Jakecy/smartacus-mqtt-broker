@@ -7,6 +7,7 @@ import lombok.Data;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
@@ -29,9 +30,24 @@ public class ClientConnection {
 
     private Long  sendMessageLastestTime; //接收最近一次报文的时间
 
+
+    //每个socket连接维护一个独立的packetId,packetId从1开始
+    private AtomicInteger lastPacketId=new AtomicInteger(1);
+
+
+    /**
+     * 获取本次的packetId
+     */
+    private  Integer  getNextPacketId(){
+     return    lastPacketId.getAndIncrement();
+    }
+
+
     public ClientConnection(Channel channel, SessionManager sessionManager) {
         this.channel = channel;
         this.sessionManager = sessionManager;
         this.sendMessageLastestTime=DateUtil.nowTime();
     }
+
+
 }
