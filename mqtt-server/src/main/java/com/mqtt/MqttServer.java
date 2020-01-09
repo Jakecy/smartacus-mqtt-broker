@@ -29,6 +29,7 @@ public class MqttServer {
     private static final Logger logger = LoggerFactory.getLogger(MqttServer.class);
 
     public MqttServer() {
+
     }
 
     public void run() throws Exception{
