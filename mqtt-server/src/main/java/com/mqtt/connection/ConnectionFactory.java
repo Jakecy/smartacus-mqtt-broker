@@ -18,7 +18,7 @@ public class ConnectionFactory {
 
 
 
-    private static  final ConcurrentHashMap<String,ClientConnection> connectionFactory=new ConcurrentHashMap<>(1024);
+    public static  final ConcurrentHashMap<String,ClientConnection> connectionFactory=new ConcurrentHashMap<>(1024);
 
 
 

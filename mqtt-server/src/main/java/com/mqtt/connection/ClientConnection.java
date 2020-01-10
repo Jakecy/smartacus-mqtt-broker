@@ -1,5 +1,6 @@
 package com.mqtt.connection;
 
+import com.alibaba.fastjson.JSONObject;
 import com.mqtt.common.ChannelAttributes;
 import com.mqtt.config.UsernamePasswordAuth;
 import com.mqtt.manager.SessionManager;
@@ -28,7 +29,7 @@ import static io.netty.channel.ChannelFutureListener.CLOSE;
  * @Note  封装客户端连接
  * 客户端连接中，需要存储当前的channel和sessionManager的引用，当前的连接状态
  */
-
+@Data
 public class ClientConnection {
 
     private final  ConnectionFactory  connectionFactory;
@@ -42,6 +43,7 @@ public class ClientConnection {
         this.connectionFactory = connectionFactory;
         this.channel = channel;
         this.sessionManager = sessionManager;
+        this.sendMessageLastestTime=DateUtil.nowTime();
     }
 
     private Set<String> subTopic=new HashSet<String>();
@@ -63,12 +65,6 @@ public class ClientConnection {
     }
 
 
-    public ClientConnection(Channel channel, SessionManager sessionManager,ConnectionFactory  connectionFactory) {
-        this.channel = channel;
-        this.sessionManager = sessionManager;
-        this.sendMessageLastestTime=DateUtil.nowTime();
-        this.connectionFactory=connectionFactory;
-    }
 
     public void handleMqttMessage(MqttMessage mqttMessage) throws Exception{
         switch (mqttMessage.fixedHeader().messageType()) {
@@ -167,10 +163,14 @@ public class ClientConnection {
     }
 
     void handleDisconnectMessage(MqttMessage  mqttMessage){
+        System.out.println("=============处理Disconnect报文之前===========");
+        System.out.println(JSONObject.toJSONString(ConnectionFactory.connectionFactory));
         //清除
         this.channel.close().addListeners(ChannelFutureListener.CLOSE);
         String clientId = CompellingUtil.getClientId(channel);
         connectionFactory.removeConnection(clientId);
+        System.out.println("=============处理Disconnect报文之后===========");
+        System.out.println(JSONObject.toJSONString(ConnectionFactory.connectionFactory));
     }
 
 
