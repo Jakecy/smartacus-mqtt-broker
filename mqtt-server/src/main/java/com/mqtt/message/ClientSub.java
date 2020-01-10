@@ -10,11 +10,10 @@ import lombok.Data;
  * @Note
  */
 @Data
-public class ClientSubModel {
+public class ClientSub {
 
     String   clientId;
 
-    String   subTopic;
 
     MqttQoS subQos;
 }

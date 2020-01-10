@@ -8,7 +8,7 @@ import com.mqtt.connection.ConnectionFactory;
 import com.mqtt.group.ClientGroup;
 import com.mqtt.group.ClientGroupManager;
 import com.mqtt.manager.SessionManager;
-import com.mqtt.message.ClientSubModel;
+import com.mqtt.message.ClientSub;
 import com.mqtt.utils.CompellingUtil;
 import com.mqtt.utils.StrUtil;
 import io.netty.buffer.ByteBuf;
@@ -68,7 +68,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
 
     //创建一个订阅队列，
     //每个主题对应的客户端
-    private final  static ConcurrentMap<String ,List<ClientSubModel>>  topicMapClient=new ConcurrentHashMap<>();
+    private final  static ConcurrentMap<String ,List<ClientSub>>  topicMapClient=new ConcurrentHashMap<>();
     //每个客户端订阅的所有主题
     private final  static  ConcurrentMap<String ,List<String>>  clientSubedTopics=new ConcurrentHashMap<>();
 
@@ -230,7 +230,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         Attribute<String> clientIdAttr = ctx.channel().attr(ChannelAttributes.ATTR_KEY_CLIENTID);
         String clientId = clientIdAttr.get();
         topics.forEach(t->{
-            List<ClientSubModel> subModelList = topicMapClient.get(t);
+            List<ClientSub> subModelList = topicMapClient.get(t);
             if(subModelList!=null && !subModelList.isEmpty()){
                 //找到并移除
                 Integer index=null;
@@ -285,13 +285,13 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
                 Attribute<String> clientId = ctx.channel().attr(ChannelAttributes.ATTR_KEY_CLIENTID);
                 //record the client's subed topic queue
                 recordSubedTopicQueueForClient(clientId,sub);
-                List<ClientSubModel> subModelList = topicMapClient.get(sub.topicName());
+                List<ClientSub> subModelList = topicMapClient.get(sub.topicName());
                 System.out.println("==============主题："+sub.topicName()+"的订阅列表==========");
                 System.out.println(JSONObject.toJSONString(subModelList));
                 grantedSubQos.add(sub.qualityOfService().value());
                 if(subModelList==null){
                     subModelList=new ArrayList<>(20);
-                    ClientSubModel csm=new ClientSubModel();
+                    ClientSub csm=new ClientSub();
 
                     csm.setClientId(clientId.get());
                     csm.setSubTopic(sub.topicName());
@@ -299,11 +299,11 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
                     subModelList.add(csm);
                     topicMapClient.put(sub.topicName(),subModelList);
                 }else {
-                    List<ClientSubModel> oldTopicSub = topicMapClient.get(sub.topicName());
+                    List<ClientSub> oldTopicSub = topicMapClient.get(sub.topicName());
                     System.out.println("==============老主题："+sub.topicName()+"的订阅列表==========");
                     System.out.println(JSONObject.toJSONString(oldTopicSub));
                     //新加入
-                    ClientSubModel csm=new ClientSubModel();
+                    ClientSub csm=new ClientSub();
                     csm.setClientId(clientId.get());
                     csm.setSubTopic(sub.topicName());
                     csm.setSubQos(sub.qualityOfService());
@@ -645,11 +645,11 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         System.out.println("=============处理Qos0的消息==============");
         System.out.println(JSONObject.toJSONString(connectionFactory));
         String dstTopic=pubMsg.variableHeader().topicName();
-        List<ClientSubModel> clientSubModels = topicMapClient.get(dstTopic);
-        if(clientSubModels==null || clientSubModels.isEmpty()){
+        List<ClientSub> clientSubs = topicMapClient.get(dstTopic);
+        if(clientSubs ==null || clientSubs.isEmpty()){
             return;
         }
-        clientSubModels.forEach(client->{
+        clientSubs.forEach(client->{
             Channel targetChannel = connectionFactory.getConnection(client.getClientId()).getChannel();
             System.out.println(JSONObject.toJSONString(targetChannel));
             if(targetChannel==null){
@@ -673,11 +673,11 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         System.out.println(JSONObject.toJSONString(connectionFactory));
         System.out.println("==============publish消息的topic是===========");
         String dstTopic=pubMsg.variableHeader().topicName();
-        List<ClientSubModel> clientSubModels = topicMapClient.get(dstTopic);
-        if(clientSubModels==null || clientSubModels.isEmpty()){
+        List<ClientSub> clientSubs = topicMapClient.get(dstTopic);
+        if(clientSubs ==null || clientSubs.isEmpty()){
             return;
         }
-        clientSubModels.forEach(client->{
+        clientSubs.forEach(client->{
             Channel targetChannel = connectionFactory.getConnection(client.getClientId()).getChannel();
             if(targetChannel==null){
                 return;
