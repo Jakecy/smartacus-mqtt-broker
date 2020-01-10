@@ -57,7 +57,7 @@ public class PostMan {
     /**
      * 放入到订阅队列中
      */
-    public static  List<Integer>  add2TopicSubers(String clientId,MqttSubscribeMessage  subMsg){
+      synchronized    public static  List<Integer>  add2TopicSubers(String clientId,MqttSubscribeMessage  subMsg){
         System.out.println("================订阅消息=================");
         System.out.println(JSONObject.toJSONString(subMsg));
         MqttMessageIdVariableHeader subVarHeader = subMsg.variableHeader();
