@@ -73,6 +73,9 @@ public class ClientConnection {
             case CONNECT:
                 handleConnectMessage(mqttMessage);
                 break;
+            case PINGREQ:
+                handlePingReqMessage(mqttMessage);
+                break;
             case SUBSCRIBE:
                 handleSubscribeMessage((MqttSubscribeMessage) mqttMessage);
                 break;
@@ -107,6 +110,11 @@ public class ClientConnection {
                 System.out.println("Unexpected message type: " + mqttMessage.fixedHeader().messageType());
                 ReferenceCountUtil.release(mqttMessage);
         }
+    }
+
+    private void handlePingReqMessage(MqttMessage mqttMessage) {
+        MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PINGRESP, false, MqttQoS.AT_MOST_ONCE, false, 0);
+        this.channel.writeAndFlush(new MqttMessage(fixedHeader));
     }
 
     private void handlePublishMessage(MqttPublishMessage mqttMessage) {

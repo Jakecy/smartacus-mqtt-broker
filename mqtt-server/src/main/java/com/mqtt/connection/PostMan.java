@@ -154,6 +154,8 @@ public class PostMan {
         Optional.ofNullable(topicName).ifPresent(tn->{
             //获取订阅者
             List<ClientSub> topicSubList = topicSubers.get(tn.trim());
+            System.out.println("==============订阅者有================");
+            System.out.println(JSONObject.toJSONString(topicSubList));
             if(null !=topicSubList && !topicSubList.isEmpty()){
                 //
                 topicSubList.forEach(ts->{
@@ -165,8 +167,10 @@ public class PostMan {
 
     private static void pubQos0Msg2Suber(MqttPublishMessage pubMsg, ClientSub ts, Integer nextPacketId) {
           //发送消息
+        System.out.println("===========转发消息================");
         ClientConnection connection = ConnectionFactory.getConnection(ts.getClientId());
         Optional.ofNullable(connection).ifPresent(c->{
+            System.out.println("===========转发消息================");
             MqttFixedHeader pubFixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false,
                     MqttQoS.AT_LEAST_ONCE, true, 0);
             MqttPublishVariableHeader publishVariableHeader=new MqttPublishVariableHeader(pubMsg.variableHeader().topicName(),nextPacketId);
