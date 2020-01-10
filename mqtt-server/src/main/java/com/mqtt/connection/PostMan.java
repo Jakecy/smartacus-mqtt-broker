@@ -52,8 +52,8 @@ public class PostMan {
         Optional.ofNullable(topicList).ifPresent(mts->{
              topicList.forEach(sub->{
                  List<ClientSub> topicSubList = topicSubers.get(sub.topicName());
+                 grantedSubQos.add(sub.qualityOfService().value());
                  if(null !=topicList && !topicList.isEmpty()){
-                      //
                      ClientSub  clientSub=new ClientSub();
                      clientSub.setClientId(clientId);
                      clientSub.setSubQos(sub.qualityOfService());
