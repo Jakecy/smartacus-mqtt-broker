@@ -68,7 +68,7 @@ public class PostMan {
              topicList.forEach(sub->{
                  List<ClientSub> topicSubList = topicSubers.get(sub.topicName());
                  grantedSubQos.add(sub.qualityOfService().value());
-                 if(null !=topicList && !topicList.isEmpty()){
+                 if(null !=topicSubList && !topicSubList.isEmpty()){
                      ClientSub  clientSub=new ClientSub();
                      clientSub.setClientId(clientId);
                      clientSub.setSubQos(sub.qualityOfService());
@@ -84,6 +84,7 @@ public class PostMan {
                  }
              });
         });
+        System.out.println(JSONObject.toJSONString(topicSubers));
         return grantedSubQos;
     }
 

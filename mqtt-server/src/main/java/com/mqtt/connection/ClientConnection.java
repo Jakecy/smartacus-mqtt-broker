@@ -76,6 +76,9 @@ public class ClientConnection {
             case SUBSCRIBE:
                 handleSubscribeMessage((MqttSubscribeMessage) mqttMessage);
                 break;
+            case UNSUBSCRIBE:
+                handleUnSubMessage((MqttUnsubscribeMessage) mqttMessage);
+                break;
            /* case SUBSCRIBE:
                 handleClientSubscribeMessage(ctx,(MqttSubscribeMessage) mqttMessage);
                 break;
@@ -111,24 +114,8 @@ public class ClientConnection {
     }
 
 
-    /**
-     * 处理订阅消息
-     * @param mqttMessage
-     */
-    private void handleSubscribeMessage(MqttSubscribeMessage mqttMessage) {
-        //把该主题放到此主题的订阅队列中
-        //放入到connection中
-        //返回subAck响应
-        String clientId = CompellingUtil.getClientId(this.channel);
-        List<Integer> qos = PostMan.add2TopicSubers(clientId, mqttMessage);
-        List<MqttTopicSubscription>  topicList = mqttMessage.payload().topicSubscriptions();
-        Optional.ofNullable(topicList).ifPresent(tl->{
-            topicList.forEach(t->{
-                this.subTopic.add(t.topicName());
-            });
-        });
-        PostMan.subAck(clientId,mqttMessage,qos);
-    }
+
+
 
     private void handleConnectMessage(MqttMessage mqttMessage) {
         //合法性校验
@@ -197,6 +184,31 @@ public class ClientConnection {
         System.out.println("=============处理Disconnect报文之后===========");
         System.out.println(JSONObject.toJSONString(ConnectionFactory.connectionFactory));
     }
+
+
+    /**
+     * 处理订阅消息
+     * @param mqttMessage
+     */
+    private void handleSubscribeMessage(MqttSubscribeMessage mqttMessage) {
+        //把该主题放到此主题的订阅队列中
+        //放入到connection中
+        //返回subAck响应
+        String clientId = CompellingUtil.getClientId(this.channel);
+        List<Integer> qos = PostMan.add2TopicSubers(clientId, mqttMessage);
+        List<MqttTopicSubscription>  topicList = mqttMessage.payload().topicSubscriptions();
+        Optional.ofNullable(topicList).ifPresent(tl->{
+            topicList.forEach(t->{
+                this.subTopic.add(t.topicName());
+            });
+        });
+        PostMan.subAck(clientId,mqttMessage,qos);
+    }
+
+    private void handleUnSubMessage(MqttUnsubscribeMessage mqttMessage) {
+        //取消订阅
+    }
+
 
 
 }
