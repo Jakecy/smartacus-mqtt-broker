@@ -139,6 +139,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
             ctx.close();
             return;
         }
+
         MqttMessage mqttMessage = (MqttMessage) o;
         switch (mqttMessage.fixedHeader().messageType()) {
             case CONNECT:
@@ -294,7 +295,6 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
                     ClientSub csm=new ClientSub();
 
                     csm.setClientId(clientId.get());
-                    csm.setSubTopic(sub.topicName());
                     csm.setSubQos(sub.qualityOfService());
                     subModelList.add(csm);
                     topicMapClient.put(sub.topicName(),subModelList);
@@ -305,7 +305,6 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
                     //新加入
                     ClientSub csm=new ClientSub();
                     csm.setClientId(clientId.get());
-                    csm.setSubTopic(sub.topicName());
                     csm.setSubQos(sub.qualityOfService());
                     subModelList.add(csm);
                     topicMapClient.put(sub.topicName(),subModelList);
@@ -345,7 +344,6 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
     private void deliveryRetainedPubMsgToSuber(ChannelHandlerContext ctx, MqttSubscribeMessage mqttMessage) {
         // detect if the topic exists a retained pub msg
         Attribute<String> clientId = ctx.channel().attr(ChannelAttributes.ATTR_KEY_CLIENTID);
-        //
         List<String> topicList = clientSubedTopics.get(clientId.get());
         Optional.ofNullable(topicList).ifPresent(tl->{
             topicList.forEach(topic->{
