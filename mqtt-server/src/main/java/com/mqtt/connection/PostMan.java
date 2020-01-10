@@ -38,6 +38,21 @@ public class PostMan {
     }
 
 
+    public static void subAck(String clientId, MqttSubscribeMessage mqttMessage, List<Integer> qos) {
+        ClientConnection connection = ConnectionFactory.getConnection(clientId);
+        Optional.ofNullable(connection).ifPresent(conn->{
+            //发送subAck响应
+            MqttFixedHeader  subAckFixedHeader=new MqttFixedHeader(MqttMessageType.SUBACK,
+                    false,MqttQoS.AT_LEAST_ONCE,false,0);
+            //把sub报文中的messageId取出，然后使用它构造一个subAck的可变报头
+            MqttMessageIdVariableHeader subAckVHeader = MqttMessageIdVariableHeader.from(mqttMessage.variableHeader().messageId());
+            //这里设定为： 请求多大给多大
+            MqttSubAckPayload payload = new MqttSubAckPayload(qos);
+            MqttSubAckMessage subAckMessage = new MqttSubAckMessage(subAckFixedHeader, subAckVHeader, payload);
+            connection.getChannel().writeAndFlush(subAckMessage);
+        });
+    }
+
     /**
      * 放入到订阅队列中
      */
@@ -71,5 +86,6 @@ public class PostMan {
         });
         return grantedSubQos;
     }
+
 
 }

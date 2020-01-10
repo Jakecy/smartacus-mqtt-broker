@@ -16,6 +16,8 @@ import io.netty.util.ReferenceCountUtil;
 import lombok.Data;
 
 import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -117,7 +119,15 @@ public class ClientConnection {
         //把该主题放到此主题的订阅队列中
         //放入到connection中
         //返回subAck响应
-
+        String clientId = CompellingUtil.getClientId(this.channel);
+        List<Integer> qos = PostMan.add2TopicSubers(clientId, mqttMessage);
+        List<MqttTopicSubscription>  topicList = mqttMessage.payload().topicSubscriptions();
+        Optional.ofNullable(topicList).ifPresent(tl->{
+            topicList.forEach(t->{
+                this.subTopic.add(t.topicName());
+            });
+        });
+        PostMan.subAck(clientId,mqttMessage,qos);
     }
 
     private void handleConnectMessage(MqttMessage mqttMessage) {
