@@ -207,6 +207,10 @@ public class ClientConnection {
 
     private void handleUnSubMessage(MqttUnsubscribeMessage mqttMessage) {
         //取消订阅
+        String clientId = CompellingUtil.getClientId(this.channel);
+        //退订
+        PostMan.unsub(clientId,mqttMessage);
+        PostMan.unsubAck(clientId,mqttMessage);
     }
 
 

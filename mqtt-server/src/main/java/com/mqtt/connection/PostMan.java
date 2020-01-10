@@ -7,6 +7,7 @@ import com.mqtt.utils.CompellingUtil;
 import io.netty.handler.codec.mqtt.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -89,4 +90,49 @@ public class PostMan {
     }
 
 
+    public static void unsubAck(String clientId, MqttUnsubscribeMessage mqttMessage) {
+        ClientConnection connection = ConnectionFactory.getConnection(clientId);
+        Optional.ofNullable(connection).ifPresent(conn->{
+            //构造报文
+            MqttFixedHeader  unsubAckFixed=new MqttFixedHeader(MqttMessageType.UNSUBACK,
+                    false,
+                    MqttQoS.AT_MOST_ONCE,
+                    false,
+                    2);
+            MqttMessageIdVariableHeader  unsubAckVh=MqttMessageIdVariableHeader.from(mqttMessage.variableHeader().messageId());
+            //
+            MqttUnsubAckMessage  unsubAckMessage=new MqttUnsubAckMessage(unsubAckFixed,unsubAckVh);
+            //返回响应
+            conn.getChannel().writeAndFlush(unsubAckMessage);
+        });
+
+    }
+
+   synchronized public static void unsub(String clientId, MqttUnsubscribeMessage mqttMessage) {
+        MqttUnsubscribePayload payload = mqttMessage.payload();
+        List<String> topics = payload.topics();
+        if(topics==null || topics.isEmpty()){
+            return;
+        }
+        topics.forEach(t->{
+            List<Integer>  tags=Lists.newArrayList();
+            List<ClientSub> topicSubList = topicSubers.get(t.trim());
+            Optional.ofNullable(topicSubList).ifPresent(tsl->{
+                for (int i = 0; i < topicSubList.size(); i++) {
+                     ClientSub tse=topicSubList.get(i);
+                    if(tse.getClientId().equals(clientId)){
+                        tags.add(i);
+                    }
+                }
+            });
+            Optional.ofNullable(tags).ifPresent(tg->{
+                tags.forEach(index->{
+                    topicSubList.remove(index);
+                });
+            });
+            //重新放入
+            topicSubers.put(t.trim(),topicSubList);
+        });
+
+    }
 }
