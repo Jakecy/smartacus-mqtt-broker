@@ -79,12 +79,10 @@ public class ClientConnection {
             case UNSUBSCRIBE:
                 handleUnSubMessage((MqttUnsubscribeMessage) mqttMessage);
                 break;
-           /* case SUBSCRIBE:
-                handleClientSubscribeMessage(ctx,(MqttSubscribeMessage) mqttMessage);
+            case PUBLISH:
+                handlePublishMessage((MqttPublishMessage) mqttMessage);
                 break;
-            case UNSUBSCRIBE:
-                handleClientUNSubMessage(ctx,(MqttUnsubscribeMessage) mqttMessage);
-                break;
+           /*
             case PUBLISH:
                 handleClientPublishMessage(ctx,mqttMessage);
                 break;
@@ -100,9 +98,7 @@ public class ClientConnection {
             case PUBCOMP:
                 handleClientPubCompMessage(ctx, mqttMessage);
                 break;
-            case DISCONNECT:
-                handleClientDisconnectMessage(ctx,mqttMessage);
-                break;*/
+     */
             case DISCONNECT:
                 handleDisconnectMessage(mqttMessage);
                 break;
@@ -113,8 +109,9 @@ public class ClientConnection {
         }
     }
 
+    private void handlePublishMessage(MqttPublishMessage mqttMessage) {
 
-
+    }
 
 
     private void handleConnectMessage(MqttMessage mqttMessage) {
