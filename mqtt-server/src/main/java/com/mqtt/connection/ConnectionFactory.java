@@ -23,8 +23,9 @@ public class ConnectionFactory {
 
 
 
+
     public    ClientConnection  create(Channel channel, SessionManager sessionManager,ConnectionFactory connectionFactory) {
-        ClientConnection  connection=new ClientConnection(channel,sessionManager,connectionFactory);
+        ClientConnection  connection=new ClientConnection(connectionFactory,channel,sessionManager);
         //connectionFactory.put(channel.attr(ChannelAttributes.ATTR_KEY_CLIENTID).get(),connection);
         return connection;
     }

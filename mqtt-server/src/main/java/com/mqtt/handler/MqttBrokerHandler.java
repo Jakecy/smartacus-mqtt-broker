@@ -735,7 +735,6 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         EventLoop loop =ctx.channel().eventLoop();
         //对没有收到pubAck的报文进行重发
         loop.scheduleAtFixedRate(()->{
-            //
             System.out.println("===============使用eventLoop进行任务调度==========");
             retryPubMsgWhenNoAck(pendingAckPubMsgs);
         },0,2,TimeUnit.SECONDS);

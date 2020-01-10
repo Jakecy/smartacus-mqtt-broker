@@ -71,6 +71,9 @@ public class ClientConnection {
             case CONNECT:
                 handleConnectMessage(mqttMessage);
                 break;
+            case SUBSCRIBE:
+                handleSubscribeMessage((MqttSubscribeMessage) mqttMessage);
+                break;
            /* case SUBSCRIBE:
                 handleClientSubscribeMessage(ctx,(MqttSubscribeMessage) mqttMessage);
                 break;
@@ -103,6 +106,18 @@ public class ClientConnection {
                 System.out.println("Unexpected message type: " + mqttMessage.fixedHeader().messageType());
                 ReferenceCountUtil.release(mqttMessage);
         }
+    }
+
+
+    /**
+     * 处理订阅消息
+     * @param mqttMessage
+     */
+    private void handleSubscribeMessage(MqttSubscribeMessage mqttMessage) {
+        //把该主题放到此主题的订阅队列中
+        //放入到connection中
+        //返回subAck响应
+
     }
 
     private void handleConnectMessage(MqttMessage mqttMessage) {

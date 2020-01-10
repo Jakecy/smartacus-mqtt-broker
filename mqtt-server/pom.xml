@@ -96,6 +96,12 @@
             <artifactId>disruptor</artifactId>
             <version>3.3.6</version>
         </dependency>
+        <!--Google集合-->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>19.0</version>
+        </dependency>
     </dependencies>
 
     <build>
