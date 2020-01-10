@@ -110,7 +110,25 @@ public class ClientConnection {
     }
 
     private void handlePublishMessage(MqttPublishMessage mqttMessage) {
+        System.out.println("================publish消息================");
+        System.out.println(JSONObject.toJSONString(mqttMessage));
+        //判断Qos等级
+        MqttQoS mqttQoS = mqttMessage.fixedHeader().qosLevel();
+        switch (mqttQoS){
 
+            case AT_MOST_ONCE:
+                processQos0PubMessage(mqttMessage);
+                break;
+            case AT_LEAST_ONCE:
+                break;
+
+            case EXACTLY_ONCE:
+        }
+    }
+
+    private void processQos0PubMessage(MqttPublishMessage mqttMessage) {
+        String clientId = CompellingUtil.getClientId(this.channel);
+        PostMan.dipatchQos0PubMsg(mqttMessage);
     }
 
 

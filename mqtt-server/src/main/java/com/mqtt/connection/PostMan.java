@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @Author: chihaojie
@@ -25,6 +26,17 @@ public class PostMan {
     //订阅队列
     //每个主题对应的客户端
     private final  static ConcurrentMap<String ,List<ClientSub>> topicSubers=new ConcurrentHashMap<>();
+
+    private static final AtomicInteger lastPacketId=new AtomicInteger(1);
+
+
+    /**
+     * 获取本次的packetId
+     */
+    private static final Integer  getNextPacketId(){
+        return    lastPacketId.getAndIncrement();
+    }
+
 
 
     public static  Boolean sendConnAck(String clientId,MqttConnectMessage mqttMessage){
@@ -132,6 +144,34 @@ public class PostMan {
             });
             //重新放入
             topicSubers.put(t.trim(),topicSubList);
+        });
+
+    }
+
+    public static void dipatchQos0PubMsg(MqttPublishMessage mqttMessage) {
+        String topicName = mqttMessage.variableHeader().topicName();
+        //获取订阅者
+        Optional.ofNullable(topicName).ifPresent(tn->{
+            //获取订阅者
+            List<ClientSub> topicSubList = topicSubers.get(tn.trim());
+            if(null !=topicSubList && !topicSubList.isEmpty()){
+                //
+                topicSubList.forEach(ts->{
+                     pubQos0Msg2Suber(mqttMessage,ts,getNextPacketId());
+                });
+            }
+        });
+    }
+
+    private static void pubQos0Msg2Suber(MqttPublishMessage pubMsg, ClientSub ts, Integer nextPacketId) {
+          //发送消息
+        ClientConnection connection = ConnectionFactory.getConnection(ts.getClientId());
+        Optional.ofNullable(connection).ifPresent(c->{
+            MqttFixedHeader pubFixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false,
+                    MqttQoS.AT_LEAST_ONCE, true, 0);
+            MqttPublishVariableHeader publishVariableHeader=new MqttPublishVariableHeader(pubMsg.variableHeader().topicName(),nextPacketId);
+            MqttPublishMessage  tpubMsg=new MqttPublishMessage(pubFixedHeader,publishVariableHeader,pubMsg.payload());
+            connection.getChannel().writeAndFlush(tpubMsg);
         });
 
     }
