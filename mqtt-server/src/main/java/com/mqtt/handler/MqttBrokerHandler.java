@@ -1,12 +1,14 @@
 package com.mqtt.handler;
 
 import com.alibaba.fastjson.JSONObject;
+import com.mqtt.MqttServer;
 import com.mqtt.common.ChannelAttributes;
 import com.mqtt.config.UsernamePasswordAuth;
 import com.mqtt.connection.ClientConnection;
 import com.mqtt.connection.ConnectionFactory;
 import com.mqtt.group.ClientGroup;
 import com.mqtt.group.ClientGroupManager;
+import com.mqtt.manager.ClientSession;
 import com.mqtt.manager.SessionManager;
 import com.mqtt.message.ClientSub;
 import com.mqtt.utils.CompellingUtil;
@@ -18,10 +20,12 @@ import io.netty.handler.codec.mqtt.*;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.util.Attribute;
-import io.netty.util.AttributeKey;
 import io.netty.util.CharsetUtil;
 import io.netty.util.ReferenceCountUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.sql.Ref;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -29,6 +33,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.mqtt.common.ChannelAttributes.ATTR_KEY_CONNECTION;
 import static io.netty.channel.ChannelFutureListener.CLOSE_ON_FAILURE;
 import static io.netty.handler.codec.mqtt.MqttMessageIdVariableHeader.from;
 
@@ -55,9 +60,9 @@ import static io.netty.handler.codec.mqtt.MqttMessageIdVariableHeader.from;
 @ChannelHandler.Sharable
 public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
 
-    private static final String ATTR_CONNECTION = "connectionList";
-    private static final AttributeKey<Object> ATTR_KEY_CONNECTION = AttributeKey.valueOf(ATTR_CONNECTION);
 
+
+    private static final Logger logger = LoggerFactory.getLogger(MqttBrokerHandler.class);
 
 
 
@@ -116,11 +121,27 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        //发送ping消息
-        MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PINGREQ, false, MqttQoS.AT_MOST_ONCE, false, 0);
-        ctx.writeAndFlush(new MqttMessage(fixedHeader));
+        super.channelActive(ctx);
+             //socket建立之后，build connection
+/*        ClientConnection connection=  connectionFactory.create(ctx.channel(),sessionManager);
+        ctx.channel().attr(ATTR_KEY_CONNECTION).set(connection);*/
 
     }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        super.channelActive(ctx);
+        //判断当前连接所属的群组
+        //对该群组成员发送下线消息
+/*        String clientId = CompellingUtil.getClientId(ctx.channel());
+        String groupId = CompellingUtil.getGroupId(ctx.channel());
+        //群发下线消息
+        ClientGroupManager.sendOffLineGroupMessage(groupId);
+        connectionFactory.removeConnection(clientId);
+        ctx.channel().close().addListener(CLOSE_ON_FAILURE);*/
+    }
+
+
 
     /**
      * 服务端能接收到的报文类型有：
@@ -140,6 +161,25 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
             return;
         }
         MqttMessage mqttMessage = (MqttMessage) o;
+        ClientConnection connection = ctx.channel().attr(ATTR_KEY_CONNECTION).get();
+        try {
+            connection.handleMqttMessage(mqttMessage);
+        }catch (Exception e){
+                 e.printStackTrace();
+            //关闭通道
+            //异常发生时，执行什么动作？？
+            //打印日志，并关闭连接
+            logger.error(" exception hanppened while process mqttmessage, message is : {}, exception is : {} ",mqttMessage,e);
+            ctx.channel().close().addListeners(new ChannelFutureListener() {
+                @Override
+                public void operationComplete(ChannelFuture future) throws Exception {
+                    logger.error(" Close the client Channel due to Exception ");
+                }
+            });
+        }finally {
+            //多次release也无碍
+            ReferenceCountUtil.release(mqttMessage);
+        }
         switch (mqttMessage.fixedHeader().messageType()) {
             case CONNECT:
                 handleClientConnectMessage(ctx,mqttMessage);
@@ -183,17 +223,6 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
     }
 
 
-    @Override
-    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        //super.channelInactive(ctx);
-        System.out.println("=============测试Inactive方法==============");
-        //判断当前连接所属的群组
-        //对该群组成员发送下线消息
-        String clientId = CompellingUtil.getClientId(ctx.channel());
-        String groupId = CompellingUtil.getGroupId(ctx.channel());
-        //群发下线消息
-        ClientGroupManager.sendOffLineGroupMessage(groupId);
-    }
 
     private void handleClientPubAckMessage(ChannelHandlerContext ctx, MqttPubAckMessage mqttMessage) {
         //处理确认消息
@@ -294,7 +323,6 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
                     ClientSub csm=new ClientSub();
 
                     csm.setClientId(clientId.get());
-                    csm.setSubTopic(sub.topicName());
                     csm.setSubQos(sub.qualityOfService());
                     subModelList.add(csm);
                     topicMapClient.put(sub.topicName(),subModelList);
@@ -305,7 +333,6 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
                     //新加入
                     ClientSub csm=new ClientSub();
                     csm.setClientId(clientId.get());
-                    csm.setSubTopic(sub.topicName());
                     csm.setSubQos(sub.qualityOfService());
                     subModelList.add(csm);
                     topicMapClient.put(sub.topicName(),subModelList);
@@ -857,6 +884,9 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         //ReferenceCountUtil.release(mqttMessage);
         System.out.println("服务端返回给客户端connack响应");
         System.out.println(connAckMessage.toString());
+        ReferenceCountUtil.release(mqttMessage);
+        ReferenceCountUtil.release(mqttMessage);
+        System.out.println("=============多次release============");
 
     }
 

@@ -3,6 +3,7 @@ package com.mqtt.connection;
 import com.mqtt.manager.SessionManager;
 import com.mqtt.utils.DateUtil;
 import io.netty.channel.Channel;
+import io.netty.handler.codec.mqtt.MqttMessage;
 import lombok.Data;
 
 import java.util.HashSet;
@@ -47,6 +48,10 @@ public class ClientConnection {
         this.channel = channel;
         this.sessionManager = sessionManager;
         this.sendMessageLastestTime=DateUtil.nowTime();
+    }
+
+    public void handleMqttMessage(MqttMessage mqttMessage) throws Exception{
+
     }
 
 
