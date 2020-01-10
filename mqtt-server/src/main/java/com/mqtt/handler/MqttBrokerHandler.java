@@ -179,7 +179,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
             //多次release也无碍
             ReferenceCountUtil.release(mqttMessage);
         }
-        switch (mqttMessage.fixedHeader().messageType()) {
+        /*switch (mqttMessage.fixedHeader().messageType()) {
             case CONNECT:
                 handleClientConnectMessage(ctx,mqttMessage);
                 break;
@@ -215,7 +215,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
                 System.out.println("Unexpected message type: " + mqttMessage.fixedHeader().messageType());
                 ReferenceCountUtil.release(mqttMessage);
                 ctx.close();//这句话会把同client端建立的socket关闭
-        }
+        }*/
         //处理完之后，把消息释放掉
         //ReferenceCountUtil.release(mqttMessage);
         // ctx.close();//这句话的作用是，close the Channel,如果server主动关闭同客户端的socket

@@ -28,15 +28,21 @@ import static io.netty.channel.ChannelFutureListener.CLOSE;
  * @Note  封装客户端连接
  * 客户端连接中，需要存储当前的channel和sessionManager的引用，当前的连接状态
  */
-@Data
+
 public class ClientConnection {
 
-    private final    ConnectionFactory  connectionFactory;
+    private final  ConnectionFactory  connectionFactory;
 
 
     private final Channel channel;
 
     private final SessionManager  sessionManager;
+
+    public ClientConnection(ConnectionFactory connectionFactory, Channel channel, SessionManager sessionManager) {
+        this.connectionFactory = connectionFactory;
+        this.channel = channel;
+        this.sessionManager = sessionManager;
+    }
 
     private Set<String> subTopic=new HashSet<String>();
 
@@ -93,6 +99,9 @@ public class ClientConnection {
             case DISCONNECT:
                 handleClientDisconnectMessage(ctx,mqttMessage);
                 break;*/
+            case DISCONNECT:
+                handleDisconnectMessage(mqttMessage);
+                break;
             default:
                 System.out.println("=============收到非Mqtt===========");
                 System.out.println("Unexpected message type: " + mqttMessage.fixedHeader().messageType());
@@ -155,6 +164,13 @@ public class ClientConnection {
             }
         }
         return true;
+    }
+
+    void handleDisconnectMessage(MqttMessage  mqttMessage){
+        //清除
+        this.channel.close().addListeners(ChannelFutureListener.CLOSE);
+        String clientId = CompellingUtil.getClientId(channel);
+        connectionFactory.removeConnection(clientId);
     }
 
 
