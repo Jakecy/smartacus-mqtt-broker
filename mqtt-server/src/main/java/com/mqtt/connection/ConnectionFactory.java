@@ -23,13 +23,18 @@ public class ConnectionFactory {
 
 
 
-    public    ClientConnection  create(Channel channel, SessionManager sessionManager) {
-        ClientConnection  connection=new ClientConnection(channel,sessionManager);
-        connectionFactory.put(channel.attr(ChannelAttributes.ATTR_KEY_CLIENTID).get(),connection);
+    public    ClientConnection  create(Channel channel, SessionManager sessionManager,ConnectionFactory connectionFactory) {
+        ClientConnection  connection=new ClientConnection(channel,sessionManager,connectionFactory);
+        //connectionFactory.put(channel.attr(ChannelAttributes.ATTR_KEY_CLIENTID).get(),connection);
         return connection;
     }
 
-    public ClientConnection getConnection(String clientId){
+    public ClientConnection  putConnection(ClientConnection  connection){
+        connectionFactory.put(connection.getChannel().attr(ChannelAttributes.ATTR_KEY_CLIENTID).get(),connection);
+        return connection;
+    }
+
+    public static ClientConnection getConnection(String clientId){
         ClientConnection connection = connectionFactory.get(clientId);
         connection.setSendMessageLastestTime(DateUtil.nowTime());
         return connection;

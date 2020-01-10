@@ -122,10 +122,9 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         super.channelActive(ctx);
-             //socket建立之后，build connection
-/*        ClientConnection connection=  connectionFactory.create(ctx.channel(),sessionManager);
-        ctx.channel().attr(ATTR_KEY_CONNECTION).set(connection);*/
-
+        //socket建立之后，build connection
+        ClientConnection connection=  connectionFactory.create(ctx.channel(),sessionManager,connectionFactory);
+        ctx.channel().attr(ATTR_KEY_CONNECTION).set(connection);
     }
 
     @Override
@@ -133,12 +132,12 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         super.channelActive(ctx);
         //判断当前连接所属的群组
         //对该群组成员发送下线消息
-/*        String clientId = CompellingUtil.getClientId(ctx.channel());
+        String clientId = CompellingUtil.getClientId(ctx.channel());
         String groupId = CompellingUtil.getGroupId(ctx.channel());
         //群发下线消息
         ClientGroupManager.sendOffLineGroupMessage(groupId);
         connectionFactory.removeConnection(clientId);
-        ctx.channel().close().addListener(CLOSE_ON_FAILURE);*/
+        ctx.channel().close().addListener(CLOSE_ON_FAILURE);
     }
 
 
@@ -848,7 +847,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         System.out.println("=================组内成员======================");
         System.out.println(JSONObject.toJSONString(ClientGroupManager.group));
         ctx.channel().attr(ChannelAttributes.ATTR_KEY_CLIENTID).set(connectPayload.clientIdentifier());
-        connectionFactory.create(ctx.channel(),sessionManager);
+        connectionFactory.create(ctx.channel(),sessionManager,connectionFactory);
         //connectionFactory.pu(CompellingUtil.getClientId(ctx.channel()),connectionFactory.create(ctx.channel(),sessionManager));
         //把此连接的clientId放入到channel的attach中
         //1、从connectVariableHeader里读取 连接标志,共有6个连接标志
@@ -884,9 +883,6 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         //ReferenceCountUtil.release(mqttMessage);
         System.out.println("服务端返回给客户端connack响应");
         System.out.println(connAckMessage.toString());
-        ReferenceCountUtil.release(mqttMessage);
-        ReferenceCountUtil.release(mqttMessage);
-        System.out.println("=============多次release============");
 
     }
 
