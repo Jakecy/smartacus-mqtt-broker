@@ -4,7 +4,9 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.mqtt.message.ClientSub;
 import com.mqtt.utils.CompellingUtil;
+import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.mqtt.*;
 import io.netty.util.CharsetUtil;
@@ -171,6 +173,11 @@ public class PostMan {
     private static void pubQos0Msg2Suber(MqttPublishMessage pubMsg, ClientSub ts, Integer nextPacketId) {
         ByteBuf msgBody = pubMsg.payload();
         String s = msgBody.toString(CharsetUtil.UTF_8);
+        ByteBuf bf =pubMsg.content();
+        byte[] byteArray = new byte[bf.capacity()];
+        bf.readBytes(byteArray);
+        String result = new String(byteArray);
+        System.out.println(result+"============");
         //String  str = new String(msgBody.array(), msgBody.arrayOffset() + msgBody.readerIndex(), msgBody.readableBytes(),CharsetUtil.UTF_8);
         System.out.println("=======pub的payload===========");
         System.out.println(s);
@@ -180,12 +187,12 @@ public class PostMan {
         System.out.println(JSONObject.toJSONString(connection));
         Optional.ofNullable(connection).ifPresent(c->{
             System.out.println("===========转发消息================");
-            MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false, MqttQoS.AT_LEAST_ONCE, false, 0);
+            MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false, MqttQoS.AT_MOST_ONCE, false, 0);
             MqttPublishVariableHeader varHeader = new MqttPublishVariableHeader(pubMsg.variableHeader().topicName(), nextPacketId);
             ByteBuf  payload=Unpooled.buffer();
             String str2 =s;
             payload.writeBytes(str2.getBytes());
-            MqttPublishMessage  tpubMsg=new MqttPublishMessage(fixedHeader,varHeader,payload);
+            MqttPublishMessage  tpubMsg=new MqttPublishMessage(fixedHeader,varHeader,Unpooled.copiedBuffer(s, CharsetUtil.UTF_8));
             System.out.println("============消息体=============");
             System.out.println(pubMsg.payload().toString());
             System.out.println("=============已转发的pub消息==============");
