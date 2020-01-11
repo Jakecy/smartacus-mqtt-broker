@@ -184,10 +184,9 @@ public class PostMan {
             System.out.println("===========转发消息================");
             MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false, MqttQoS.AT_MOST_ONCE, false, 0);
             MqttPublishVariableHeader varHeader = new MqttPublishVariableHeader(pubMsg.variableHeader().topicName(), nextPacketId);
-            ByteBuf  payload=Unpooled.buffer();
-            String str2 =content;
-            payload.writeBytes(str2.getBytes());
-            MqttPublishMessage  tpubMsg=new MqttPublishMessage(fixedHeader,varHeader,StrUtil.String2ByteBuf(content));
+
+            final ByteBuf copiedPayload = pubMsg.payload().retainedDuplicate();
+            MqttPublishMessage  tpubMsg=new MqttPublishMessage(fixedHeader,varHeader,copiedPayload);
             System.out.println("=============已转发的pub消息==============");
             System.out.println(tpubMsg.toString());
             connection.getChannel().writeAndFlush(tpubMsg);
