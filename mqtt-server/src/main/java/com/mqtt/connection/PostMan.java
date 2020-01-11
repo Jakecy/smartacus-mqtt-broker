@@ -180,12 +180,12 @@ public class PostMan {
         System.out.println(JSONObject.toJSONString(connection));
         Optional.ofNullable(connection).ifPresent(c->{
             System.out.println("===========转发消息================");
-            MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false, MqttQoS.AT_MOST_ONCE, false, 0);
+            MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false, MqttQoS.AT_LEAST_ONCE, false, 0);
             MqttPublishVariableHeader varHeader = new MqttPublishVariableHeader(pubMsg.variableHeader().topicName(), nextPacketId);
             ByteBuf  payload=Unpooled.buffer();
-            String str2 = "four you";
+            String str2 =s;
             payload.writeBytes(str2.getBytes());
-            MqttPublishMessage  tpubMsg=new MqttPublishMessage(fixedHeader,varHeader,msgBody);
+            MqttPublishMessage  tpubMsg=new MqttPublishMessage(fixedHeader,varHeader,payload);
             System.out.println("============消息体=============");
             System.out.println(pubMsg.payload().toString());
             System.out.println("=============已转发的pub消息==============");
