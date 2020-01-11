@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.mqtt.message.ClientSub;
 import com.mqtt.utils.CompellingUtil;
+import com.mqtt.utils.StrUtil;
 import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
@@ -171,16 +172,10 @@ public class PostMan {
     }
 
     private static void pubQos0Msg2Suber(MqttPublishMessage pubMsg, ClientSub ts, Integer nextPacketId) {
-        ByteBuf msgBody = pubMsg.payload();
-        String s = msgBody.toString(CharsetUtil.UTF_8);
-        ByteBuf bf =pubMsg.content();
-        byte[] byteArray = new byte[bf.capacity()];
-        bf.readBytes(byteArray);
-        String result = new String(byteArray);
-        System.out.println(result+"============");
+        String content = StrUtil.ByteBuf2String(pubMsg.payload());
         //String  str = new String(msgBody.array(), msgBody.arrayOffset() + msgBody.readerIndex(), msgBody.readableBytes(),CharsetUtil.UTF_8);
         System.out.println("=======pub的payload===========");
-        System.out.println(s);
+        System.out.println(content);
         //发送消息
         System.out.println("===========转发消息================");
         ClientConnection connection = ConnectionFactory.getConnection(ts.getClientId());
@@ -190,11 +185,9 @@ public class PostMan {
             MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false, MqttQoS.AT_MOST_ONCE, false, 0);
             MqttPublishVariableHeader varHeader = new MqttPublishVariableHeader(pubMsg.variableHeader().topicName(), nextPacketId);
             ByteBuf  payload=Unpooled.buffer();
-            String str2 =s;
+            String str2 =content;
             payload.writeBytes(str2.getBytes());
-            MqttPublishMessage  tpubMsg=new MqttPublishMessage(fixedHeader,varHeader,Unpooled.copiedBuffer(s, CharsetUtil.UTF_8));
-            System.out.println("============消息体=============");
-            System.out.println(pubMsg.payload().toString());
+            MqttPublishMessage  tpubMsg=new MqttPublishMessage(fixedHeader,varHeader,StrUtil.String2ByteBuf(content));
             System.out.println("=============已转发的pub消息==============");
             System.out.println(tpubMsg.toString());
             connection.getChannel().writeAndFlush(tpubMsg);

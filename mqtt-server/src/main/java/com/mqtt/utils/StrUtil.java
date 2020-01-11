@@ -1,5 +1,9 @@
 package com.mqtt.utils;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.util.CharsetUtil;
+
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
@@ -16,6 +20,32 @@ import java.util.regex.Pattern;
  * @Note
  */
 public class StrUtil {
+
+
+    /**
+     * ByteBuf 2 String
+     */
+    public static  final String   ByteBuf2String( ByteBuf buf){
+        try{
+            byte[] bytes = new byte[buf.readableBytes()];
+            int readerIndex = buf.readerIndex();
+            buf.getBytes(readerIndex, bytes);
+            return new String(bytes,0,bytes.length,"UTF-8");
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * String 2 ByteBuf
+     * @param str
+     * @return
+     */
+    public static  final  ByteBuf  String2ByteBuf(String str){
+       return Unpooled.copiedBuffer(str, CharsetUtil.UTF_8);
+    }
+
 
     /**
      * 字节数组转换为字符串

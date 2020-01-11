@@ -28,4 +28,6 @@ public class CompellingUtil {
         String groupId=spiltArray[0];
         return groupId;
     }
+
+
 }
