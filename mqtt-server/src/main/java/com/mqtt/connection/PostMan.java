@@ -7,6 +7,7 @@ import com.mqtt.utils.CompellingUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.mqtt.*;
+import io.netty.util.CharsetUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -168,7 +169,12 @@ public class PostMan {
     }
 
     private static void pubQos0Msg2Suber(MqttPublishMessage pubMsg, ClientSub ts, Integer nextPacketId) {
-          //发送消息
+        ByteBuf msgBody = pubMsg.payload();
+        String s = msgBody.toString(CharsetUtil.UTF_8);
+        //String  str = new String(msgBody.array(), msgBody.arrayOffset() + msgBody.readerIndex(), msgBody.readableBytes(),CharsetUtil.UTF_8);
+        System.out.println("=======pub的payload===========");
+        System.out.println(s);
+        //发送消息
         System.out.println("===========转发消息================");
         ClientConnection connection = ConnectionFactory.getConnection(ts.getClientId());
         System.out.println(JSONObject.toJSONString(connection));
@@ -177,9 +183,9 @@ public class PostMan {
             MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false, MqttQoS.AT_MOST_ONCE, false, 0);
             MqttPublishVariableHeader varHeader = new MqttPublishVariableHeader(pubMsg.variableHeader().topicName(), nextPacketId);
             ByteBuf  payload=Unpooled.buffer();
-            String str = "four you";
-            payload.writeBytes(str.getBytes());
-            MqttPublishMessage  tpubMsg=new MqttPublishMessage(fixedHeader,varHeader,payload);
+            String str2 = "four you";
+            payload.writeBytes(str2.getBytes());
+            MqttPublishMessage  tpubMsg=new MqttPublishMessage(fixedHeader,varHeader,msgBody);
             System.out.println("============消息体=============");
             System.out.println(pubMsg.payload().toString());
             System.out.println("=============已转发的pub消息==============");
