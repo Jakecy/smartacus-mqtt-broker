@@ -172,7 +172,7 @@ public class PostMan {
         Optional.ofNullable(connection).ifPresent(c->{
             System.out.println("===========转发消息================");
             MqttFixedHeader pubFixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false,
-                    MqttQoS.AT_LEAST_ONCE, true, 0);
+                    MqttQoS.AT_MOST_ONCE, true, 0);
             MqttPublishVariableHeader publishVariableHeader=new MqttPublishVariableHeader(pubMsg.variableHeader().topicName(),nextPacketId);
             MqttPublishMessage  tpubMsg=new MqttPublishMessage(pubFixedHeader,publishVariableHeader,pubMsg.payload());
             connection.getChannel().writeAndFlush(tpubMsg);

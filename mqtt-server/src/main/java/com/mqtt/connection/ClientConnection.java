@@ -119,7 +119,7 @@ public class ClientConnection {
 
     private void handlePublishMessage(MqttPublishMessage mqttMessage) {
         System.out.println("================publish消息================");
-        System.out.println(JSONObject.toJSONString(mqttMessage));
+        System.out.println(mqttMessage.toString());
         //判断Qos等级
         MqttQoS mqttQoS = mqttMessage.fixedHeader().qosLevel();
         switch (mqttQoS){
