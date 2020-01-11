@@ -141,17 +141,10 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
     }
 
 
+    private final  static  ConcurrentMap<String ,List<String>>  waitAckMsgs=new ConcurrentHashMap<>();
 
-    /**
-     * 服务端能接收到的报文类型有：
-     *   CONNECT、PUBLISH、PUBACK、
-     *   PUBREC、PUBREL、PUBCOMP、
-     *   SUBSCRIBE、UNSUBSCRIBE、PINGREQ、
-     *   DISCONNECT、
-     * @param ctx
-     * @param o
-     * @throws Exception
-     */
+    Queue<MqttPublishMessage> alreadyAckedMsgs = new ConcurrentLinkedQueue<MqttPublishMessage>();
+
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object o) throws Exception {
         //判断是否是mqtt协议

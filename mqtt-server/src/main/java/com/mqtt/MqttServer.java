@@ -56,6 +56,7 @@ public class MqttServer {
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
                     System.out.println("=========异步绑定完成==============");
+                    //
                 }
             });
             cf.channel().closeFuture().sync();

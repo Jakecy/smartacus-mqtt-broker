@@ -4,6 +4,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.mqtt.message.ClientSub;
 import com.mqtt.utils.CompellingUtil;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.mqtt.*;
 
 import java.util.ArrayList;
@@ -169,12 +171,19 @@ public class PostMan {
           //发送消息
         System.out.println("===========转发消息================");
         ClientConnection connection = ConnectionFactory.getConnection(ts.getClientId());
+        System.out.println(JSONObject.toJSONString(connection));
         Optional.ofNullable(connection).ifPresent(c->{
             System.out.println("===========转发消息================");
-            MqttFixedHeader pubFixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false,
-                    MqttQoS.AT_MOST_ONCE, true, 0);
-            MqttPublishVariableHeader publishVariableHeader=new MqttPublishVariableHeader(pubMsg.variableHeader().topicName(),nextPacketId);
-            MqttPublishMessage  tpubMsg=new MqttPublishMessage(pubFixedHeader,publishVariableHeader,pubMsg.payload());
+            MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false, MqttQoS.AT_MOST_ONCE, false, 0);
+            MqttPublishVariableHeader varHeader = new MqttPublishVariableHeader(pubMsg.variableHeader().topicName(), nextPacketId);
+            ByteBuf  payload=Unpooled.buffer();
+            String str = "four you";
+            payload.writeBytes(str.getBytes());
+            MqttPublishMessage  tpubMsg=new MqttPublishMessage(fixedHeader,varHeader,payload);
+            System.out.println("============消息体=============");
+            System.out.println(pubMsg.payload().toString());
+            System.out.println("=============已转发的pub消息==============");
+            System.out.println(tpubMsg.toString());
             connection.getChannel().writeAndFlush(tpubMsg);
         });
 

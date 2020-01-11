@@ -36,6 +36,7 @@ public class ClientConnection {
 
     private final  ConnectionFactory  connectionFactory;
 
+    private  String clientId;
 
     private final Channel channel;
 
@@ -159,6 +160,7 @@ public class ClientConnection {
         MqttConnectMessage connectMsg=(MqttConnectMessage)mqttMessage;
         MqttConnectPayload connectPayload = connectMsg.payload();
         channel.attr(ChannelAttributes.ATTR_KEY_CLIENTID).set(connectPayload.clientIdentifier());
+        this.clientId=channel.attr(ChannelAttributes.ATTR_KEY_CLIENTID).get();
         connectionFactory.putConnection(this);
     }
 
