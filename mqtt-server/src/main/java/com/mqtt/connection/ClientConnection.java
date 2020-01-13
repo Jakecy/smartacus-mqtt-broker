@@ -139,7 +139,18 @@ public class ClientConnection {
     private void processQos1PubMessage(MqttPublishMessage mqttMessage) {
         System.out.println(ReferenceCountUtil.refCnt(mqttMessage));
         String clientId = CompellingUtil.getClientId(this.channel);
-        PostMan.dipatchQos1PubMsg((MqttPublishMessage) mqttMessage,clientId);
+        //响应ack
+        responseAckToSender(clientId,mqttMessage);
+       final MqttPublishMessage publishMessage = mqttMessage.retainedDuplicate();
+        PostMan.dipatchQos1PubMsg((MqttPublishMessage) publishMessage,clientId);
+    }
+
+    private void responseAckToSender(String clientId, MqttPublishMessage mqttMessage) {
+        MqttFixedHeader pubAckFixedHeader = new MqttFixedHeader(MqttMessageType.PUBACK, false,
+                MqttQoS.AT_LEAST_ONCE, false, 0);
+        MqttMessageIdVariableHeader variableHeader =MqttMessageIdVariableHeader.from(lastPacketId.get()) ;//MqttMessageIdVariableHeader.from(mqttMessage.variableHeader().packetId());
+        MqttPubAckMessage    pubAck=  new MqttPubAckMessage(pubAckFixedHeader, variableHeader);
+        channel.writeAndFlush(pubAck);
     }
 
     private void processQos0PubMessage(MqttMessage mqttMessage) {

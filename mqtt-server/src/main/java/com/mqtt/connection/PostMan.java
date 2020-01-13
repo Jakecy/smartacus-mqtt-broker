@@ -3,6 +3,7 @@ package com.mqtt.connection;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.mqtt.message.ClientSub;
+import com.mqtt.message.WaitingAckQos1PublishMessage;
 import com.mqtt.utils.CompellingUtil;
 import com.mqtt.utils.StrUtil;
 import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
@@ -13,11 +14,9 @@ import io.netty.handler.codec.mqtt.*;
 import io.netty.util.CharsetUtil;
 import io.netty.util.ReferenceCountUtil;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -33,6 +32,8 @@ public class PostMan {
     //订阅队列
     //每个主题对应的客户端
     private final  static ConcurrentMap<String ,List<ClientSub>> topicSubers=new ConcurrentHashMap<>();
+
+    Queue<WaitingAckQos1PublishMessage> waitingAckPubs = new ConcurrentLinkedQueue<WaitingAckQos1PublishMessage>();
 
     private static final AtomicInteger lastPacketId=new AtomicInteger(1);
 
@@ -201,6 +202,10 @@ public class PostMan {
     }
 
     public static void dipatchQos1PubMsg(MqttPublishMessage mqttMessage, String clientId) {
+           //转发Qos1的消息
+
+          //发出去的Qos1的消息，必须要收到回复确认，否则就一直重发
+         //重发的消息的messageId
 
     }
 }
