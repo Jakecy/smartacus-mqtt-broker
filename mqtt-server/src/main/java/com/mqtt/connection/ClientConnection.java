@@ -86,6 +86,8 @@ public class ClientConnection {
             case PUBLISH:
                 handlePublishMessage((MqttPublishMessage) mqttMessage);
                 break;
+            case PUBACK:
+                handlePubAckMessage((MqttPubAckMessage) mqttMessage);
            /*
             case PUBLISH:
                 handleClientPublishMessage(ctx,mqttMessage);
@@ -111,6 +113,11 @@ public class ClientConnection {
                 System.out.println("Unexpected message type: " + mqttMessage.fixedHeader().messageType());
                 ReferenceCountUtil.release(mqttMessage);
         }
+    }
+
+    private void handlePubAckMessage(MqttPubAckMessage mqttMessage) {
+        //处理pubAck消息
+        PostMan.handlePubAckMsg(mqttMessage,clientId);
     }
 
     private void handlePingReqMessage(MqttMessage mqttMessage) {

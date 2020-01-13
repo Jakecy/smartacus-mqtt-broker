@@ -35,7 +35,7 @@ public class PostMan {
     //每个主题对应的客户端
     private final  static ConcurrentMap<String ,List<ClientSub>> topicSubers=new ConcurrentHashMap<>();
 
-    private final static Queue<WaitingAckQos1PublishMessage> waitingAckPubs = new ConcurrentLinkedQueue<WaitingAckQos1PublishMessage>();
+    private final static ConcurrentMap<String,WaitingAckQos1PublishMessage> waitingAckPubs = new ConcurrentHashMap<String,WaitingAckQos1PublishMessage>();
 
     private static final AtomicInteger lastPacketId=new AtomicInteger(1);
 
@@ -228,7 +228,7 @@ public class PostMan {
                     waitingAck.setTopic(topicName);
                     waitingAck.setMessageId(messageId);
                     waitingAck.setPayload(StrUtil.ByteBuf2String(mqttMessage.payload()));
-                    waitingAckPubs.offer(waitingAck);
+                    waitingAckPubs.put(clientId,waitingAck);
                 });
             });
         });
@@ -240,20 +240,11 @@ public class PostMan {
             if(channel!=null){
                 channel.eventLoop().scheduleAtFixedRate(()->{
                     //重发消息
-                    ConcurrentLinkedQueue<WaitingAckQos1PublishMessage> newWaitings = new ConcurrentLinkedQueue<>();
-                    while (!waitingAckPubs.isEmpty()){
-                        WaitingAckQos1PublishMessage poll = waitingAckPubs.poll();
+                    waitingAckPubs.forEach((k,v)->{
                         //进行发送
+                        WaitingAckQos1PublishMessage poll = waitingAckPubs.get(k);
                         resendQos1PubMsg(poll);
-                        //发送完之后，重新放回队列中
-                        newWaitings.offer(poll);
-                    }
-                    if(!newWaitings.isEmpty()){
-                        while (!newWaitings.isEmpty()){
-                            WaitingAckQos1PublishMessage e = newWaitings.poll();
-                            waitingAckPubs.offer(e);
-                        }
-                    }
+                    });
                 },3,3,TimeUnit.SECONDS);
 
             }
@@ -275,5 +266,14 @@ public class PostMan {
           }catch (Exception e){
               e.printStackTrace();
           }
+    }
+
+    public static void handlePubAckMsg(MqttPubAckMessage mqttMessage, String clientId) {
+        int messageId = mqttMessage.variableHeader().messageId();
+        WaitingAckQos1PublishMessage publishMessage = waitingAckPubs.get(messageId);
+        Optional.ofNullable(publishMessage).ifPresent(p->{
+            waitingAckPubs.remove(messageId);
+        });
+
     }
 }
