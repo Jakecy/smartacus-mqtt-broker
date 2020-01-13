@@ -10,6 +10,7 @@ import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
 import io.netty.handler.codec.mqtt.*;
 import io.netty.util.CharsetUtil;
 import io.netty.util.ReferenceCountUtil;
@@ -18,6 +19,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -33,7 +35,7 @@ public class PostMan {
     //每个主题对应的客户端
     private final  static ConcurrentMap<String ,List<ClientSub>> topicSubers=new ConcurrentHashMap<>();
 
-    Queue<WaitingAckQos1PublishMessage> waitingAckPubs = new ConcurrentLinkedQueue<WaitingAckQos1PublishMessage>();
+    private final static Queue<WaitingAckQos1PublishMessage> waitingAckPubs = new ConcurrentLinkedQueue<WaitingAckQos1PublishMessage>();
 
     private static final AtomicInteger lastPacketId=new AtomicInteger(1);
 
@@ -203,9 +205,75 @@ public class PostMan {
 
     public static void dipatchQos1PubMsg(MqttPublishMessage mqttMessage, String clientId) {
            //转发Qos1的消息
+         String topicName = mqttMessage.variableHeader().topicName();
+        List<ClientSub> clientSubs = topicSubers.get(topicName);
+        Optional.ofNullable(clientSubs).ifPresent(css->{
+            //转发消息
+            //遍历进行发布
+            clientSubs.forEach(cs->{
+                 //获取连接进行发送
+                ClientConnection connection = ConnectionFactory.getConnection(cs.getClientId());
+                System.out.println(JSONObject.toJSONString(connection));
+                Optional.ofNullable(connection).ifPresent(c->{
+                    MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false, MqttQoS.AT_MOST_ONCE, false, 0);
+                    Integer messageId=getNextPacketId();
+                    MqttPublishVariableHeader varHeader = new MqttPublishVariableHeader(mqttMessage.variableHeader().topicName(), messageId);
+                    //retainedDuplicate=duplicate+retained, retained即：针对当前ByteBuf多增加一次引用计数
+                    final ByteBuf copiedPayload = mqttMessage.payload().retainedDuplicate();
+                    MqttPublishMessage  tpubMsg=new MqttPublishMessage(fixedHeader,varHeader,copiedPayload);
+                    connection.getChannel().writeAndFlush(tpubMsg);
+                    //发送后，存入待确认队列
+                    WaitingAckQos1PublishMessage   waitingAck=new WaitingAckQos1PublishMessage();
+                    waitingAck.setClientId(clientId);
+                    waitingAck.setTopic(topicName);
+                    waitingAck.setMessageId(messageId);
+                    waitingAck.setPayload(StrUtil.ByteBuf2String(mqttMessage.payload()));
+                    waitingAckPubs.offer(waitingAck);
+                });
+            });
+        });
+        //发出去的Qos1的消息，必须要收到回复确认，否则就一直重发
+        //3秒后进行重发
+        ClientConnection connection = ConnectionFactory.getConnection(clientId);
+        Optional.ofNullable(clientId).ifPresent(c->{
+            Channel channel = connection.getChannel();
+            if(channel!=null){
+                channel.eventLoop().scheduleAtFixedRate(()->{
+                    //重发消息
+                    ConcurrentLinkedQueue<WaitingAckQos1PublishMessage> newWaitings = new ConcurrentLinkedQueue<>();
+                    while (!waitingAckPubs.isEmpty()){
+                        WaitingAckQos1PublishMessage poll = waitingAckPubs.poll();
+                        //进行发送
+                        resendQos1PubMsg(poll);
+                        //发送完之后，重新放回队列中
+                        newWaitings.offer(poll);
+                    }
+                    if(!newWaitings.isEmpty()){
+                        while (!newWaitings.isEmpty()){
+                            WaitingAckQos1PublishMessage e = newWaitings.poll();
+                            waitingAckPubs.offer(e);
+                        }
+                    }
+                },3,3,TimeUnit.SECONDS);
 
-          //发出去的Qos1的消息，必须要收到回复确认，否则就一直重发
-         //重发的消息的messageId
+            }
+        });
+        //重发的消息的messageId
+        //把新队列放入
+       ReferenceCountUtil.release(mqttMessage);
+    }
 
+    private static void resendQos1PubMsg(WaitingAckQos1PublishMessage poll) {
+          try{
+              ClientConnection connection = ConnectionFactory.getConnection(poll.getClientId());
+              MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, true, MqttQoS.AT_LEAST_ONCE, false, 0);
+              MqttPublishVariableHeader varHeader = new MqttPublishVariableHeader(poll.getTopic(), poll.getMessageId());
+              //retainedDuplicate=duplicate+retained, retained即：针对当前ByteBuf多增加一次引用计数
+              ByteBuf payload=StrUtil.String2ByteBuf(poll.getPayload());
+              MqttPublishMessage  resendPubMsg=new MqttPublishMessage(fixedHeader,varHeader,payload);
+              connection.getChannel().writeAndFlush(resendPubMsg);
+          }catch (Exception e){
+              e.printStackTrace();
+          }
     }
 }

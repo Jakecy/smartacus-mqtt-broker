@@ -15,4 +15,8 @@ public class WaitingAckQos1PublishMessage {
 
     Integer   messageId;
 
+    String    topic;
+
+    String    payload;
+
 }
