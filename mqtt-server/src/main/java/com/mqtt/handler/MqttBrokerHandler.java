@@ -158,9 +158,6 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
             connection.handleMqttMessage(mqttMessage);
         }catch (Exception e){
                  e.printStackTrace();
-            //关闭通道
-            //异常发生时，执行什么动作？？
-            //打印日志，并关闭连接
             logger.error(" exception hanppened while process mqttmessage, message is : {}, exception is : {} ",mqttMessage,e);
             ctx.channel().close().addListeners(new ChannelFutureListener() {
                 @Override
@@ -169,8 +166,14 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
                 }
             });
         }finally {
-            //多次release也无碍
-            ReferenceCountUtil.release(mqttMessage);
+            //System.out.println(ReferenceCountUtil.refCnt(mqttMessage));
+            if(mqttMessage instanceof MqttPublishMessage){
+                System.out.println("============pub消息引用数======");
+                System.out.println(ReferenceCountUtil.refCnt(mqttMessage));
+                //ReferenceCountUtil.release(mqttMessage);
+                ((MqttPublishMessage) mqttMessage).release();
+                System.out.println(ReferenceCountUtil.refCnt(mqttMessage));
+            }
         }
         /*switch (mqttMessage.fixedHeader().messageType()) {
             case CONNECT:

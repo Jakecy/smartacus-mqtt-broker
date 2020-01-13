@@ -135,9 +135,10 @@ public class ClientConnection {
         }
     }
 
-    private void processQos0PubMessage(MqttPublishMessage mqttMessage) {
+    private void processQos0PubMessage(MqttMessage mqttMessage) {
+        System.out.println(ReferenceCountUtil.refCnt(mqttMessage));
         String clientId = CompellingUtil.getClientId(this.channel);
-        PostMan.dipatchQos0PubMsg(mqttMessage);
+        PostMan.dipatchQos0PubMsg((MqttPublishMessage) mqttMessage);
     }
 
 

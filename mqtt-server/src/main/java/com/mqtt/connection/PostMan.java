@@ -11,6 +11,7 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.mqtt.*;
 import io.netty.util.CharsetUtil;
+import io.netty.util.ReferenceCountUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -190,6 +191,11 @@ public class PostMan {
             System.out.println("=============已转发的pub消息==============");
             System.out.println(tpubMsg.toString());
             connection.getChannel().writeAndFlush(tpubMsg);
+            int i = tpubMsg.refCnt();
+            System.out.println("========已转发消息的引用计数=========="+i);
+            //System.out.println(pubMsg.release());
+            //System.out.println(tpubMsg.release());
+            //tpubMsg.release();
         });
 
     }
