@@ -129,10 +129,17 @@ public class ClientConnection {
                 processQos0PubMessage(mqttMessage);
                 break;
             case AT_LEAST_ONCE:
+                processQos1PubMessage(mqttMessage);
                 break;
 
             case EXACTLY_ONCE:
         }
+    }
+
+    private void processQos1PubMessage(MqttPublishMessage mqttMessage) {
+        System.out.println(ReferenceCountUtil.refCnt(mqttMessage));
+        String clientId = CompellingUtil.getClientId(this.channel);
+        PostMan.dipatchQos1PubMsg((MqttPublishMessage) mqttMessage,clientId);
     }
 
     private void processQos0PubMessage(MqttMessage mqttMessage) {

@@ -199,4 +199,8 @@ public class PostMan {
         });
 
     }
+
+    public static void dipatchQos1PubMsg(MqttPublishMessage mqttMessage, String clientId) {
+
+    }
 }
