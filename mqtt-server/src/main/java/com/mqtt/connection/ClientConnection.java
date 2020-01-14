@@ -371,14 +371,14 @@ public class ClientConnection {
         Optional.ofNullable(remove).ifPresent(r->{
             completedPubMsgQueue.offer(remove);
         });
-       //转发该Qos2级别的消息
+     /*  //转发该Qos2级别的消息
        channel.eventLoop().scheduleAtFixedRate(()->{
            Qos2Message qos2Message = completedPubMsgQueue.poll();
            Optional.ofNullable(qos2Message).ifPresent(q2m->{
                //
                PostMan.dipatchQos2PubMsg(qos2Message);
            });
-       },1,1,TimeUnit.SECONDS);
+       },1,1,TimeUnit.SECONDS);*/
     }
 
     private void handlePubCompMessage(MqttMessage pubComp) {
