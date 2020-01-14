@@ -42,6 +42,9 @@ public class PostMan {
 
     private final static ConcurrentMap<String,WaitingAckQos1PublishMessage> waitingAckPubs = new ConcurrentHashMap<String,WaitingAckQos1PublishMessage>();
 
+
+    private final static  ConcurrentHashMap<Integer,Qos2Message>  notRecPubs=new ConcurrentHashMap<>(128);
+
     private static final AtomicInteger lastPacketId=new AtomicInteger(1);
 
 
@@ -293,15 +296,20 @@ public class PostMan {
               //重发
              ClientConnection connection = ConnectionFactory.getConnection(client);
              Channel channel = connection.getChannel();
-             MqttMessage pubComp= createQos2PubMsg(qos2Message);
+             MqttPublishMessage pubComp= createQos2PubMsg(qos2Message);
              channel.writeAndFlush(pubComp);
+             //加入rec等待队列
+             Qos2Message waitRec=new Qos2Message(pubComp.variableHeader().packetId(),qos2Message.getTopic(),qos2Message.getQos(),qos2Message.getContent());
+             notRecPubs.put(waitRec.getMessageId(),waitRec);
          });
     }
 
-    private static MqttMessage createQos2PubMsg(Qos2Message qos2Message) {
-        MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBCOMP, false, AT_MOST_ONCE, false, 0);
-        MqttMessage pubCompMessage = new MqttMessage(fixedHeader, from(qos2Message.getMessageId()));
-        return pubCompMessage;
+    private static MqttPublishMessage createQos2PubMsg(Qos2Message qos2Message) {
+        MqttFixedHeader pubFixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, true,
+                MqttQoS.EXACTLY_ONCE, true, 0);
+        MqttPublishVariableHeader publishVariableHeader = new MqttPublishVariableHeader(qos2Message.getTopic(), getNextPacketId());
+        MqttPublishMessage publishMessage = new MqttPublishMessage(pubFixedHeader, publishVariableHeader, StrUtil.String2ByteBuf(qos2Message.getContent()));
+        return publishMessage;
     }
 
     private static List<String> matchTopic(Qos2Message qos2Message) {
