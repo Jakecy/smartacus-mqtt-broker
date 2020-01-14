@@ -109,23 +109,9 @@ public class ClientConnection {
             case PUBREL:
                 handlePubRelMessage(mqttMessage);
                 break;
-           /*
-            case PUBLISH:
-                handleClientPublishMessage(ctx,mqttMessage);
-                break;
-            case PUBACK:
-                handleClientPubAckMessage(ctx,(MqttPubAckMessage) mqttMessage);
-                break;
-            case PUBREC:
-                handleClientPubRecMessage(ctx,mqttMessage);
-                break;
-            case PUBREL:
-                handleClientPubRelMessage(ctx,mqttMessage);
-                break;
             case PUBCOMP:
-                handleClientPubCompMessage(ctx, mqttMessage);
+                handlePubCompMessage(mqttMessage);
                 break;
-     */
             case DISCONNECT:
                 handleDisconnectMessage(mqttMessage);
                 break;
@@ -135,6 +121,8 @@ public class ClientConnection {
                 ReferenceCountUtil.release(mqttMessage);
         }
     }
+
+
 
     private void handlePubRecMessage(MqttMessage mqttMessage) {
         //TODO
@@ -231,9 +219,12 @@ public class ClientConnection {
 
 
     private void processQos2PubMessageAsSender(MqttPublishMessage mqttMessage) {
-        notAckPubRecMap.forEach((k,v)->{
-
-        });
+        int packetId = mqttMessage.variableHeader().packetId();
+        String topic = mqttMessage.variableHeader().topicName();
+        String content = StrUtil.ByteBuf2String(mqttMessage.payload());
+        MqttQoS mqttQoS = mqttMessage.fixedHeader().qosLevel();
+        Qos2Message qos2Message=createQos2Message(packetId,topic,content,mqttQoS);
+        PostMan.dipatchQos2PubMsg(qos2Message);
     }
 
     private void retrySendRecWhenNoRelAcked(Integer packetId) {
@@ -392,6 +383,11 @@ public class ClientConnection {
        },1,1,TimeUnit.SECONDS);
     }
 
+    private void handlePubCompMessage(MqttMessage pubComp) {
+        MqttMessageIdVariableHeader subVarHeader = (MqttMessageIdVariableHeader) pubComp.variableHeader();
+        int messageId =subVarHeader.messageId();
+        PostMan.processPubCompMsg(messageId);
+    }
 
 
 }

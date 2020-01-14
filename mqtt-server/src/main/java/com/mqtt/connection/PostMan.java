@@ -386,4 +386,9 @@ public class PostMan {
             connection.getChannel().writeAndFlush(pubRelMessage);
         });
     }
+
+    public static void processPubCompMsg(int messageId) {
+        //从等待comp响应的列表中移出相应的报文
+        notCompRelsMap.remove(messageId);
+    }
 }
