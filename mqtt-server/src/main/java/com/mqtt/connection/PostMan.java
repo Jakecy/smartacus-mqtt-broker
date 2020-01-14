@@ -53,6 +53,16 @@ public class PostMan {
     static {
         scheduler.scheduleAtFixedRate(()->{
             //重发pub
+            if(null !=notRecPubsMap && !notRecPubsMap.isEmpty()){
+                notRecPubsMap.forEach((k,v)->{
+                    MqttPublishMessage pubMsg= createQos2PubMsg(v);
+                    ClientConnection connection = ConnectionFactory.getConnection(v.getClientId());
+                    Optional.ofNullable(connection).ifPresent(c->{
+                        connection.getChannel().writeAndFlush(pubMsg);
+                    });
+
+                });
+            }
             //重发rel
             System.out.println(topicSubers);
         },1,1,TimeUnit.SECONDS);
@@ -310,6 +320,7 @@ public class PostMan {
              channel.writeAndFlush(pubComp);
              //加入rec等待队列
              Qos2Message waitRec=new Qos2Message(pubComp.variableHeader().packetId(),qos2Message.getTopic(),qos2Message.getQos(),qos2Message.getContent());
+             waitRec.setClientId(client);
              notRecPubsMap.put(waitRec.getMessageId(),waitRec);
          });
     }

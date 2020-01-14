@@ -20,6 +20,8 @@ public class Qos2Message {
 
     private final String  content;
 
+    private String clientId;
+
     public Qos2Message(Integer messageId, String topic, MqttQoS qos, String content) {
         this.messageId = messageId;
         this.topic = topic;
