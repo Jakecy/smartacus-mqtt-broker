@@ -17,10 +17,7 @@ import io.netty.util.CharsetUtil;
 import io.netty.util.ReferenceCountUtil;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -36,6 +33,16 @@ import static io.netty.handler.codec.mqtt.MqttQoS.AT_MOST_ONCE;
 public class PostMan {
 
 
+    //任务调度线程池
+    private final static ScheduledExecutorService  scheduler = Executors.newScheduledThreadPool(1);
+
+    static {
+        scheduler.scheduleAtFixedRate(()->{
+             //重发pub
+             //重发rel
+        },1,1,TimeUnit.SECONDS);
+    }
+
     //订阅队列
     //每个主题对应的客户端
     private final  static ConcurrentMap<String ,List<ClientSub>> topicSubers=new ConcurrentHashMap<>();
@@ -43,7 +50,7 @@ public class PostMan {
     private final static ConcurrentMap<String,WaitingAckQos1PublishMessage> waitingAckPubs = new ConcurrentHashMap<String,WaitingAckQos1PublishMessage>();
 
 
-    private final static  ConcurrentHashMap<Integer,Qos2Message>  notRecPubs=new ConcurrentHashMap<>(128);
+    private final static  ConcurrentHashMap<Integer,Qos2Message>  notRecPubsMap=new ConcurrentHashMap<>(128);
 
     private static final AtomicInteger lastPacketId=new AtomicInteger(1);
 
@@ -300,7 +307,7 @@ public class PostMan {
              channel.writeAndFlush(pubComp);
              //加入rec等待队列
              Qos2Message waitRec=new Qos2Message(pubComp.variableHeader().packetId(),qos2Message.getTopic(),qos2Message.getQos(),qos2Message.getContent());
-             notRecPubs.put(waitRec.getMessageId(),waitRec);
+             notRecPubsMap.put(waitRec.getMessageId(),waitRec);
          });
     }
 
