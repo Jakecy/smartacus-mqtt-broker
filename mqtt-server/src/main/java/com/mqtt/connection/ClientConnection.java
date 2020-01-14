@@ -1,6 +1,7 @@
 package com.mqtt.connection;
 
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.collect.Lists;
 import com.mqtt.common.ChannelAttributes;
 import com.mqtt.config.UsernamePasswordAuth;
 import com.mqtt.manager.SessionManager;
@@ -15,13 +16,14 @@ import io.netty.util.CharsetUtil;
 import io.netty.util.ReferenceCountUtil;
 import lombok.Data;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.netty.channel.ChannelFutureListener.CLOSE;
+import static io.netty.handler.codec.mqtt.MqttMessageIdVariableHeader.from;
+import static io.netty.handler.codec.mqtt.MqttQoS.AT_MOST_ONCE;
 
 
 /**
@@ -58,6 +60,11 @@ public class ClientConnection {
 
     //每个socket连接维护一个独立的packetId,packetId从1开始
     private AtomicInteger lastPacketId=new AtomicInteger(1);
+
+    //未完成的pub消息
+    private final ArrayList<Integer>  nonCompletePubMessageIds= Lists.newArrayList();
+
+    private final ConcurrentHashMap<Integer,MqttPubAckMessage> notAckPubRecMap=new ConcurrentHashMap<>(1024);
 
 
     /**
@@ -138,9 +145,71 @@ public class ClientConnection {
             case AT_LEAST_ONCE:
                 processQos1PubMessage(mqttMessage);
                 break;
-
             case EXACTLY_ONCE:
+                processQos2PubMessage(mqttMessage);
+                break;
         }
+    }
+
+    /**
+     * 处理Qos2级别的pub消息
+     * @param mqttMessage
+     */
+    private void processQos2PubMessage(MqttPublishMessage mqttMessage) {
+        int packetId = mqttMessage.variableHeader().packetId();
+        if(nonCompletePubMessageIds.contains(packetId)){
+            ReferenceCountUtil.release(mqttMessage);
+            return;
+        }
+        processQos2PubMessageAsReceiver(mqttMessage);
+        processQos2PubMessageAsSender(mqttMessage);
+        ReferenceCountUtil.release(mqttMessage);
+    }
+
+
+
+    private void processQos2PubMessageAsReceiver(MqttPublishMessage mqttMessage) {
+        //作为接收者
+        int packetId = mqttMessage.variableHeader().packetId();
+        String topic = mqttMessage.variableHeader().topicName();
+        ByteBuf payload = mqttMessage.payload();
+        //响应pubRec，并把该pubRec放入待确认队列
+        nonCompletePubMessageIds.add(packetId);
+        MqttPubAckMessage oldRelMsg = notAckPubRecMap.get(packetId);
+        if(null ==oldRelMsg){
+            //发送pubRec报文
+            MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBREC, false, AT_MOST_ONCE,
+                                                              false, 0);
+            MqttPubAckMessage pubRecMessage = new MqttPubAckMessage(fixedHeader, from(packetId));
+            //发送
+            channel.writeAndFlush(pubRecMessage);
+            //加入等待确认队列
+            notAckPubRecMap.put(packetId,pubRecMessage);
+        }else {
+            channel.writeAndFlush(oldRelMsg);
+        }
+        //重发
+        channel.eventLoop().scheduleAtFixedRate(()->{
+            //重发rec报文
+            retrySendRecWhenNoRelAcked(packetId);
+        },2,2,TimeUnit.SECONDS);
+
+    }
+
+
+
+    private void processQos2PubMessageAsSender(MqttPublishMessage mqttMessage) {
+        notAckPubRecMap.forEach((k,v)->{
+
+        });
+    }
+
+    private void retrySendRecWhenNoRelAcked(Integer packetId) {
+        //重发rec报文
+        MqttPubAckMessage oldRelMsg = notAckPubRecMap.get(packetId);
+        Optional.ofNullable(oldRelMsg).ifPresent(e->{
+            channel.writeAndFlush(oldRelMsg);
+        });
     }
 
     private void processQos1PubMessage(MqttPublishMessage mqttMessage) {
