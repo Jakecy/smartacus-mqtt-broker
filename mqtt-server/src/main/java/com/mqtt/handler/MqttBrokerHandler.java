@@ -166,7 +166,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
                 }
             });
         }finally {
-            ReferenceCountUtil.release(mqttMessage);
+            ReferenceCountUtil.safeRelease(mqttMessage);
         }
         /*switch (mqttMessage.fixedHeader().messageType()) {
             case CONNECT:
