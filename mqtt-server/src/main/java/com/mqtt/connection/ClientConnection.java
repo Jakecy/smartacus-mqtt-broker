@@ -5,8 +5,10 @@ import com.google.common.collect.Lists;
 import com.mqtt.common.ChannelAttributes;
 import com.mqtt.config.UsernamePasswordAuth;
 import com.mqtt.manager.SessionManager;
+import com.mqtt.message.Qos2Message;
 import com.mqtt.utils.CompellingUtil;
 import com.mqtt.utils.DateUtil;
+import com.mqtt.utils.StrUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -18,6 +20,7 @@ import lombok.Data;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -64,7 +67,11 @@ public class ClientConnection {
     //未完成的pub消息
     private final ArrayList<Integer>  nonCompletePubMessageIds= Lists.newArrayList();
 
+    private final ConcurrentHashMap<Integer,Qos2Message> notCompletedPubMsgMap=new ConcurrentHashMap<>(1024);
+
     private final ConcurrentHashMap<Integer,MqttPubAckMessage> notAckPubRecMap=new ConcurrentHashMap<>(1024);
+
+    private final  Queue<Qos2Message> completedPubMsgQueue=new ConcurrentLinkedDeque<Qos2Message>();
 
 
     /**
@@ -95,6 +102,9 @@ public class ClientConnection {
                 break;
             case PUBACK:
                 handlePubAckMessage((MqttPubAckMessage) mqttMessage);
+            case PUBREL:
+                handlePubRelMessage(mqttMessage);
+                break;
            /*
             case PUBLISH:
                 handleClientPublishMessage(ctx,mqttMessage);
@@ -121,6 +131,8 @@ public class ClientConnection {
                 ReferenceCountUtil.release(mqttMessage);
         }
     }
+
+
 
     private void handlePubAckMessage(MqttPubAckMessage mqttMessage) {
         //处理pubAck消息
@@ -172,9 +184,13 @@ public class ClientConnection {
         //作为接收者
         int packetId = mqttMessage.variableHeader().packetId();
         String topic = mqttMessage.variableHeader().topicName();
+        MqttQoS mqttQoS = mqttMessage.fixedHeader().qosLevel();
         ByteBuf payload = mqttMessage.payload();
+        String content=StrUtil.ByteBuf2String(payload);
         //响应pubRec，并把该pubRec放入待确认队列
         nonCompletePubMessageIds.add(packetId);
+        Qos2Message qos2Message=createQos2Message(packetId,topic,content,mqttQoS);
+        notCompletedPubMsgMap.put(packetId,qos2Message);
         MqttPubAckMessage oldRelMsg = notAckPubRecMap.get(packetId);
         if(null ==oldRelMsg){
             //发送pubRec报文
@@ -196,6 +212,9 @@ public class ClientConnection {
 
     }
 
+    private Qos2Message createQos2Message(int packetId, String topic, String content, MqttQoS mqttQoS) {
+        return new Qos2Message(packetId,topic,mqttQoS,content);
+    }
 
 
     private void processQos2PubMessageAsSender(MqttPublishMessage mqttMessage) {
@@ -331,6 +350,33 @@ public class ClientConnection {
         //退订
         PostMan.unsub(clientId,mqttMessage);
         PostMan.unsubAck(clientId,mqttMessage);
+    }
+
+    private void handlePubRelMessage(MqttMessage mqttMessage) {
+        //处理pubRel报文
+        //TODO
+        //1、notRecAck队列减少
+        //2、重发comp
+        //3、把此消息放入已完成队列
+        final int messageId = ((MqttMessageIdVariableHeader) mqttMessage.variableHeader()).messageId();
+        notAckPubRecMap.remove(messageId);
+        MqttFixedHeader recFixedHeader = new MqttFixedHeader(MqttMessageType.PUBCOMP, false,
+                MqttQoS.AT_LEAST_ONCE, false, 2);
+        MqttPubAckMessage pubCompMessage = new MqttPubAckMessage(recFixedHeader, from(messageId));
+        channel.writeAndFlush(pubCompMessage);
+        //发送已完成队列
+        Qos2Message remove = notCompletedPubMsgMap.remove(messageId);
+        Optional.ofNullable(remove).ifPresent(r->{
+            completedPubMsgQueue.offer(remove);
+        });
+       //转发该Qos2级别的消息
+       channel.eventLoop().scheduleAtFixedRate(()->{
+           Qos2Message qos2Message = completedPubMsgQueue.poll();
+           Optional.ofNullable(qos2Message).ifPresent(q2m->{
+               //
+               PostMan.dipatchQos2PubMsg(qos2Message);
+           });
+       },1,1,TimeUnit.SECONDS);
     }
 
 

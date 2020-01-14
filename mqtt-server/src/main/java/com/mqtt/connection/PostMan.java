@@ -3,6 +3,7 @@ package com.mqtt.connection;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.mqtt.message.ClientSub;
+import com.mqtt.message.Qos2Message;
 import com.mqtt.message.WaitingAckQos1PublishMessage;
 import com.mqtt.utils.CompellingUtil;
 import com.mqtt.utils.StrUtil;
@@ -274,6 +275,10 @@ public class PostMan {
         Optional.ofNullable(publishMessage).ifPresent(p->{
             waitingAckPubs.remove(messageId);
         });
+
+    }
+
+    public static void dipatchQos2PubMsg(Qos2Message qos2Message) {
 
     }
 }
