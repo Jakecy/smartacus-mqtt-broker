@@ -7,7 +7,7 @@ import com.mqtt.message.Qos2Message;
 import com.mqtt.message.WaitingAckQos1PublishMessage;
 import com.mqtt.utils.CompellingUtil;
 import com.mqtt.utils.StrUtil;
-import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -57,11 +57,8 @@ public class PostMan {
             //重发pub
             if(null !=notRecPubsMap && !notRecPubsMap.isEmpty()){
                 notRecPubsMap.forEach((k,v)->{
-                    MqttPublishMessage pubMsg= createQos2PubMsg(v);
-                    ClientConnection connection = ConnectionFactory.getConnection(v.getClientId());
-                    Optional.ofNullable(connection).ifPresent(c->{
-                        connection.getChannel().writeAndFlush(pubMsg);
-                    });
+                    System.out.println("=========定时任务重发，Pub消息=============");
+                    resendPubMessageWhenNoRecAcked(v);
 
                 });
             }
@@ -71,10 +68,22 @@ public class PostMan {
                     resendPubRelMsg(v);
                 });
             }
-            System.out.println(topicSubers);
         },1,1,TimeUnit.SECONDS);
     }
 
+    private static void resendPubMessageWhenNoRecAcked(Qos2Message v) {
+        System.out.println("===============重发的老pub消息===========");
+        System.out.println(JSONObject.toJSONString(v));
+        Qos2Message qos2Message = notRecPubsMap.get(v.getMessageId());
+        MqttFixedHeader pubFixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, true,
+                MqttQoS.EXACTLY_ONCE, false, 0);
+        MqttPublishVariableHeader publishVariableHeader = new MqttPublishVariableHeader(qos2Message.getTopic(), qos2Message.getMessageId());
+        MqttPublishMessage pubMsg = new MqttPublishMessage(pubFixedHeader, publishVariableHeader, StrUtil.String2ByteBuf(qos2Message.getContent()));
+        ClientConnection connection = ConnectionFactory.getConnection(v.getClientId());
+        Optional.ofNullable(connection).ifPresent(c->{
+            connection.getChannel().writeAndFlush(pubMsg);
+        });
+    }
 
 
     /**
@@ -320,6 +329,8 @@ public class PostMan {
            //2、生成pub消息并转发
            //3、没有收到rec时，重发
           List<String> suberClients=matchTopic(qos2Message);
+          System.out.println("=============匹配的订阅客户端======");
+          System.out.println(JSONObject.toJSONString(suberClients));
           //进行转发
          suberClients.forEach(client->{
               //重发
@@ -331,12 +342,14 @@ public class PostMan {
              Qos2Message waitRec=new Qos2Message(pubComp.variableHeader().packetId(),qos2Message.getTopic(),qos2Message.getQos(),qos2Message.getContent());
              waitRec.setClientId(client);
              notRecPubsMap.put(waitRec.getMessageId(),waitRec);
+             System.out.println("===========放入notRecPubsMap=========");
+             System.out.println(JSONObject.toJSONString(waitRec));
          });
     }
 
     private static MqttPublishMessage createQos2PubMsg(Qos2Message qos2Message) {
         MqttFixedHeader pubFixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, true,
-                MqttQoS.EXACTLY_ONCE, true, 0);
+                MqttQoS.EXACTLY_ONCE, false, 0);
         MqttPublishVariableHeader publishVariableHeader = new MqttPublishVariableHeader(qos2Message.getTopic(), getNextPacketId());
         MqttPublishMessage publishMessage = new MqttPublishMessage(pubFixedHeader, publishVariableHeader, StrUtil.String2ByteBuf(qos2Message.getContent()));
         return publishMessage;
@@ -358,9 +371,13 @@ public class PostMan {
      * @param clientId
      */
     public static void processPubRecMsg(MqttMessage recMsg, String clientId) {
+        System.out.println("=============移出前==================");
+        System.out.println(JSONObject.toJSONString(notRecPubsMap));
         //移出等待rec队列
         final int messageID = ((MqttMessageIdVariableHeader) recMsg.variableHeader()).messageId();
         Qos2Message qos2Message = notRecPubsMap.remove(messageID);
+        System.out.println("=============移出后==================");
+        System.out.println(JSONObject.toJSONString(notRecPubsMap));
         //响应pubRel报文
         sendPubRelToClient(messageID,clientId);
         notCompRelsMap.put(messageID,qos2Message);

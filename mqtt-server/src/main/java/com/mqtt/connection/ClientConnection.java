@@ -125,6 +125,8 @@ public class ClientConnection {
 
 
     private void handlePubRecMessage(MqttMessage mqttMessage) {
+        System.out.println("===============收到PubRec消息===========");
+        System.out.println(mqttMessage.toString());
         //TODO
         //从等待rec中移出对应报文
         //响应rel回去，并重试响应
@@ -170,10 +172,6 @@ public class ClientConnection {
      */
     private void processQos2PubMessage(MqttPublishMessage mqttMessage) {
         int packetId = mqttMessage.variableHeader().packetId();
-        if(nonCompletePubMessageIds.contains(packetId)){
-            ReferenceCountUtil.release(mqttMessage);
-            return;
-        }
         processQos2PubMessageAsReceiver(mqttMessage);
         processQos2PubMessageAsSender(mqttMessage);
         ReferenceCountUtil.release(mqttMessage);
