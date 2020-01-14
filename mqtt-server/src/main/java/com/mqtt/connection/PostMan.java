@@ -33,15 +33,7 @@ import static io.netty.handler.codec.mqtt.MqttQoS.AT_MOST_ONCE;
 public class PostMan {
 
 
-    //任务调度线程池
-    private final static ScheduledExecutorService  scheduler = Executors.newScheduledThreadPool(1);
 
-    static {
-        scheduler.scheduleAtFixedRate(()->{
-             //重发pub
-             //重发rel
-        },1,1,TimeUnit.SECONDS);
-    }
 
     //订阅队列
     //每个主题对应的客户端
@@ -54,6 +46,17 @@ public class PostMan {
 
     private static final AtomicInteger lastPacketId=new AtomicInteger(1);
 
+    //任务调度线程池
+    private final static ScheduledExecutorService  scheduler = Executors.newScheduledThreadPool(1);
+
+
+    static {
+        scheduler.scheduleAtFixedRate(()->{
+            //重发pub
+            //重发rel
+            System.out.println(topicSubers);
+        },1,1,TimeUnit.SECONDS);
+    }
 
     /**
      * 获取本次的packetId
