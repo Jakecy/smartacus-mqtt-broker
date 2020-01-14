@@ -22,6 +22,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+
+import static io.netty.handler.codec.mqtt.MqttMessageIdVariableHeader.from;
+import static io.netty.handler.codec.mqtt.MqttQoS.AT_MOST_ONCE;
 
 /**
  * @Author: chihaojie
@@ -279,6 +283,34 @@ public class PostMan {
     }
 
     public static void dipatchQos2PubMsg(Qos2Message qos2Message) {
+           //转发Qos2级别的消息
+           //1、找到匹配的订阅者
+           //2、生成pub消息并转发
+           //3、没有收到rec时，重发
+          List<String> suberClients=matchTopic(qos2Message);
+          //进行转发
+         suberClients.forEach(client->{
+              //重发
+             ClientConnection connection = ConnectionFactory.getConnection(client);
+             Channel channel = connection.getChannel();
+             MqttMessage pubComp= createQos2PubMsg(qos2Message);
+             channel.writeAndFlush(pubComp);
+         });
+    }
 
+    private static MqttMessage createQos2PubMsg(Qos2Message qos2Message) {
+        MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBCOMP, false, AT_MOST_ONCE, false, 0);
+        MqttMessage pubCompMessage = new MqttMessage(fixedHeader, from(qos2Message.getMessageId()));
+        return pubCompMessage;
+    }
+
+    private static List<String> matchTopic(Qos2Message qos2Message) {
+        String topic = qos2Message.getTopic();
+        List<ClientSub> clientSubs = topicSubers.get(topic);
+        if(null !=clientSubs && !clientSubs.isEmpty()){
+            List<String> collect = clientSubs.stream().map(ClientSub::getClientId).collect(Collectors.toList());
+            return collect;
+        }
+        return null;
     }
 }
