@@ -44,6 +44,8 @@ public class PostMan {
 
     private final static  ConcurrentHashMap<Integer,Qos2Message>  notRecPubsMap=new ConcurrentHashMap<>(128);
 
+    private final static  ConcurrentHashMap<Integer,Qos2Message>  notCompRelsMap=new ConcurrentHashMap<>(128);
+
     private static final AtomicInteger lastPacketId=new AtomicInteger(1);
 
     //任务调度线程池
@@ -64,9 +66,16 @@ public class PostMan {
                 });
             }
             //重发rel
+            if(null !=notCompRelsMap && !notCompRelsMap.isEmpty()){
+                notCompRelsMap.forEach((k,v)->{
+                    resendPubRelMsg(v);
+                });
+            }
             System.out.println(topicSubers);
         },1,1,TimeUnit.SECONDS);
     }
+
+
 
     /**
      * 获取本次的packetId
@@ -341,5 +350,40 @@ public class PostMan {
             return collect;
         }
         return null;
+    }
+
+    /**
+     * 处理pubRec报文
+     * @param recMsg
+     * @param clientId
+     */
+    public static void processPubRecMsg(MqttMessage recMsg, String clientId) {
+        //移出等待rec队列
+        final int messageID = ((MqttMessageIdVariableHeader) recMsg.variableHeader()).messageId();
+        Qos2Message qos2Message = notRecPubsMap.remove(messageID);
+        //响应pubRel报文
+        sendPubRelToClient(messageID,clientId);
+        notCompRelsMap.put(messageID,qos2Message);
+    }
+
+    private static void sendPubRelToClient(int messageID, String clientId) {
+        //响应Rel
+        ClientConnection connection = ConnectionFactory.getConnection(clientId);
+        Optional.ofNullable(connection).ifPresent(c->{
+            MqttFixedHeader recFixedHeader = new MqttFixedHeader(MqttMessageType.PUBREL, false,
+                    MqttQoS.EXACTLY_ONCE, false, 2);
+            MqttPubAckMessage pubRelMessage = new MqttPubAckMessage(recFixedHeader, from(messageID));
+            connection.getChannel().writeAndFlush(pubRelMessage);
+        });
+    }
+
+    private static void resendPubRelMsg(Qos2Message v) {
+        ClientConnection connection = ConnectionFactory.getConnection(v.getClientId());
+        Optional.ofNullable(connection).ifPresent(c->{
+            MqttFixedHeader recFixedHeader = new MqttFixedHeader(MqttMessageType.PUBREL, true,
+                    MqttQoS.EXACTLY_ONCE, false, 2);
+            MqttPubAckMessage pubRelMessage = new MqttPubAckMessage(recFixedHeader, from(v.getMessageId()));
+            connection.getChannel().writeAndFlush(pubRelMessage);
+        });
     }
 }

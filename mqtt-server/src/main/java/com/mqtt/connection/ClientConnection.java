@@ -16,6 +16,7 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.handler.codec.mqtt.*;
 import io.netty.util.CharsetUtil;
 import io.netty.util.ReferenceCountUtil;
+import javafx.geometry.Pos;
 import lombok.Data;
 
 import java.util.*;
@@ -102,6 +103,9 @@ public class ClientConnection {
                 break;
             case PUBACK:
                 handlePubAckMessage((MqttPubAckMessage) mqttMessage);
+            case PUBREC:
+                handlePubRecMessage(mqttMessage);
+                break;
             case PUBREL:
                 handlePubRelMessage(mqttMessage);
                 break;
@@ -132,6 +136,15 @@ public class ClientConnection {
         }
     }
 
+    private void handlePubRecMessage(MqttMessage mqttMessage) {
+        //TODO
+        //从等待rec中移出对应报文
+        //响应rel回去，并重试响应
+        //收到pubRec报文
+        //响应pubRel
+        String clientId=CompellingUtil.getClientId(channel);
+        PostMan.processPubRecMsg(mqttMessage,clientId);
+    }
 
 
     private void handlePubAckMessage(MqttPubAckMessage mqttMessage) {
