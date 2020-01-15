@@ -190,7 +190,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
                     ClientConnection connection = connectionFactory.getConnection(CompellingUtil.getClientId(ctx.channel()));
                     if(connection!=null){
                         Long interval=(connection.getSendMessageLastestTime()-System.currentTimeMillis())/1000;
-                        if(interval>3){
+                        if(interval>2){
                             ctx.close().addListener(CLOSE_ON_FAILURE);
                         }                        }
                     //ctx.close().addListener(CLOSE_ON_FAILURE);
