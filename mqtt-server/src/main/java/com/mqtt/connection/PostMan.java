@@ -100,11 +100,21 @@ public class PostMan {
 
 
     public static  Boolean sendConnAck(String clientId,MqttConnectMessage mqttMessage){
+       final boolean sessionPresent;
+        boolean cleanSession = mqttMessage.variableHeader().isCleanSession();
+        if(cleanSession){
+            sessionPresent=false;
+        }else {
+            //判断是否存在旧会话
+            //如果有，则值为true,否则为false
+            sessionPresent=false;
+        }
         ClientConnection connection = ConnectionFactory.getConnection(clientId);
         Optional.ofNullable(connection).ifPresent(conn->{
-            MqttFixedHeader fixedHeader=new MqttFixedHeader(MqttMessageType.CONNACK,false,MqttQoS.AT_LEAST_ONCE,false,2);
-            MqttConnAckVariableHeader connAckVheader=new MqttConnAckVariableHeader(MqttConnectReturnCode.CONNECTION_ACCEPTED,true);
-            MqttConnAckMessage connAckMessage=new MqttConnAckMessage(fixedHeader,connAckVheader);
+            MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(MqttMessageType.CONNACK, false, MqttQoS.AT_MOST_ONCE,
+                    false, 0);
+            MqttConnAckVariableHeader mqttConnAckVariableHeader = new MqttConnAckVariableHeader(MqttConnectReturnCode.CONNECTION_ACCEPTED, sessionPresent);
+            MqttConnAckMessage  connAckMessage= new MqttConnAckMessage(mqttFixedHeader, mqttConnAckVariableHeader);
             connection.getChannel().writeAndFlush(connAckMessage);
         });
         return true;
