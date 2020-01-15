@@ -194,7 +194,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
                             ctx.close().addListener(CLOSE_ON_FAILURE);
                         }                        }
                     //ctx.close().addListener(CLOSE_ON_FAILURE);
-                },2,TimeUnit.SECONDS);
+                },1,TimeUnit.SECONDS);
             }else if(idleEvent.state().equals(IdleState.WRITER_IDLE)) {
                 //当写空闲时，就发送ping消息给对端
                 MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PINGREQ, false, MqttQoS.AT_MOST_ONCE, false, 0);
