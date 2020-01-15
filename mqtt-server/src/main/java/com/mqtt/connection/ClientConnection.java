@@ -116,10 +116,9 @@ public class ClientConnection {
                 handleDisconnectMessage(mqttMessage);
                 break;
             default:
-                System.out.println("=============收到非Mqtt===========");
-                System.out.println("Unexpected message type: " + mqttMessage.fixedHeader().messageType());
-                ReferenceCountUtil.release(mqttMessage);
+                ReferenceCountUtil.safeRelease(mqttMessage);
         }
+
     }
 
 
