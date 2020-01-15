@@ -190,11 +190,11 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
                     ClientConnection connection = connectionFactory.getConnection(CompellingUtil.getClientId(ctx.channel()));
                     if(connection!=null){
                         Long interval=(connection.getSendMessageLastestTime()-System.currentTimeMillis())/1000;
-                        if(interval>5){
+                        if(interval>3){
                             ctx.close().addListener(CLOSE_ON_FAILURE);
                         }                        }
                     //ctx.close().addListener(CLOSE_ON_FAILURE);
-                },5,TimeUnit.SECONDS);
+                },2,TimeUnit.SECONDS);
             }else if(idleEvent.state().equals(IdleState.WRITER_IDLE)) {
                 //当写空闲时，就发送ping消息给对端
                 MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PINGREQ, false, MqttQoS.AT_MOST_ONCE, false, 0);
