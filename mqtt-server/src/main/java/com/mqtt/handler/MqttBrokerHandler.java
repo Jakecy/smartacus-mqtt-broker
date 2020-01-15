@@ -185,7 +185,8 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
             //如果发送读空闲的话，就发送一个ping消息，如果5秒内接收不到回复，就关闭连接
             IdleStateEvent  idleEvent=(IdleStateEvent)evt;
             if(idleEvent.state().equals(IdleState.READER_IDLE)){
-                this.sendPingReq(ctx.channel());
+                ctx.close().addListener(CLOSE_ON_FAILURE);
+               /* this.sendPingReq(ctx.channel());
                 ctx.channel().eventLoop().schedule(()->{
                     ClientConnection connection = connectionFactory.getConnection(CompellingUtil.getClientId(ctx.channel()));
                     if(connection!=null){
@@ -194,7 +195,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
                             ctx.close().addListener(CLOSE_ON_FAILURE);
                         }                        }
                     //ctx.close().addListener(CLOSE_ON_FAILURE);
-                },1,TimeUnit.SECONDS);
+                },0,TimeUnit.SECONDS);*/
             }else if(idleEvent.state().equals(IdleState.WRITER_IDLE)) {
                 //当写空闲时，就发送ping消息给对端
                 MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PINGREQ, false, MqttQoS.AT_MOST_ONCE, false, 0);
