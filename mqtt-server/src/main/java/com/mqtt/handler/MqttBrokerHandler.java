@@ -185,8 +185,6 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
             //如果发送读空闲的话，就发送一个ping消息，如果5秒内接收不到回复，就关闭连接
             IdleStateEvent  idleEvent=(IdleStateEvent)evt;
             if(idleEvent.state().equals(IdleState.READER_IDLE)){
-                System.out.println("..........readerIdleTimeOut,first try ping ,then wait ,finnally  will close the channel ...... ");
-                System.out.println("===========读空闲时，主动发送ping报文，探测连接的活性===========");
                 this.sendPingReq(ctx.channel());
                 ctx.channel().eventLoop().schedule(()->{
                     ClientConnection connection = connectionFactory.getConnection(CompellingUtil.getClientId(ctx.channel()));
