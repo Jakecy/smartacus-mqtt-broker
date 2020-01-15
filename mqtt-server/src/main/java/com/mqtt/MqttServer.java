@@ -36,8 +36,8 @@ public class MqttServer {
     }
 
     public void run() throws Exception{
-        EventLoopGroup bossGroup=new NioEventLoopGroup();
-        NioEventLoopGroup  workerGroup=new NioEventLoopGroup();
+        EventLoopGroup bossGroup=new NioEventLoopGroup(1);
+        NioEventLoopGroup  workerGroup=new NioEventLoopGroup(128);
         try{
             //实例化session工厂和connection工厂
             SessionManager sessionManager=new SessionManager();
@@ -48,7 +48,7 @@ public class MqttServer {
                     .channel(NioServerSocketChannel.class)
                     //向通道的中添加handler初始化器
                     .childHandler(new MqttChannelChannelInitializer(sessionManager,connectionFactory))
-                    .option(ChannelOption.SO_BACKLOG,128)
+                    .option(ChannelOption.SO_BACKLOG,1024)
                     //设置子Socket的keepalive时间
                     .childOption(ChannelOption.SO_KEEPALIVE,true);
             //绑定端口号

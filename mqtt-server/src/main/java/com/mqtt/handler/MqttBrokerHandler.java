@@ -133,11 +133,10 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         //判断当前连接所属的群组
         //对该群组成员发送下线消息
         String clientId = CompellingUtil.getClientId(ctx.channel());
-        String groupId = CompellingUtil.getGroupId(ctx.channel());
-        //群发下线消息
-        ClientGroupManager.sendOffLineGroupMessage(groupId);
-        connectionFactory.removeConnection(clientId);
-        ctx.channel().close().addListener(CLOSE_ON_FAILURE);
+        Optional.ofNullable(clientId).ifPresent(c->{
+            connectionFactory.removeConnection(clientId);
+            ctx.channel().close();
+        });
     }
 
 
