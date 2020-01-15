@@ -53,6 +53,7 @@ public class PostMan {
 
 
     static {
+
         scheduler.scheduleAtFixedRate(()->{
             //重发pub
             if(null !=notRecPubsMap && !notRecPubsMap.isEmpty()){
@@ -68,6 +69,9 @@ public class PostMan {
                     resendPubRelMsg(v);
                 });
             }
+            //输出当前的连接数
+            System.out.println("===========当前连接的设备数================");
+            System.out.println(ConnectionFactory.connectionFactory.size());
         },1,1,TimeUnit.SECONDS);
     }
 
