@@ -208,7 +208,7 @@ public class PostMan {
 
     }
 
-    public static void dipatchQos0PubMsg(MqttPublishMessage mqttMessage) {
+  synchronized   public static void dipatchQos0PubMsg(MqttPublishMessage mqttMessage) {
         String topicName = mqttMessage.variableHeader().topicName();
         //获取订阅者
         Optional.ofNullable(topicName).ifPresent(tn->{
@@ -230,8 +230,7 @@ public class PostMan {
         //String  str = new String(msgBody.array(), msgBody.arrayOffset() + msgBody.readerIndex(), msgBody.readableBytes(),CharsetUtil.UTF_8);
         System.out.println("=======pub的payload===========");
         System.out.println(content);
-        //发送消息
-        System.out.println("===========转发消息================");
+        //发送消
         ClientConnection connection = ConnectionFactory.getConnection(ts.getClientId());
         System.out.println(JSONObject.toJSONString(connection));
         Optional.ofNullable(connection).ifPresent(c->{
@@ -244,8 +243,7 @@ public class PostMan {
             System.out.println("=============已转发的pub消息==============");
             System.out.println(tpubMsg.toString());
             connection.getChannel().writeAndFlush(tpubMsg);
-            int i = tpubMsg.refCnt();
-            System.out.println("========已转发消息的引用计数=========="+i);
+            System.out.println(content);
             //System.out.println(pubMsg.release());
             //System.out.println(tpubMsg.release());
             //tpubMsg.release();

@@ -6,6 +6,7 @@ import com.mqtt.manager.SessionManager;
 import com.mqtt.utils.DateUtil;
 import io.netty.channel.Channel;
 
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -37,7 +38,9 @@ public class ConnectionFactory {
 
     public static ClientConnection getConnection(String clientId){
         ClientConnection connection = connectionFactory.get(clientId);
-        connection.setSendMessageLastestTime(DateUtil.nowTime());
+        Optional.ofNullable(connection).ifPresent(c->{
+            connection.setSendMessageLastestTime(DateUtil.nowTime());
+        });
         return connection;
     }
 

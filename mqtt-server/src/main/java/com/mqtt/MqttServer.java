@@ -58,7 +58,7 @@ public class MqttServer {
             sboot.bind(port).addListeners(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
-                    System.out.println("=========异步绑定完成==============");
+                    System.out.println("=========绑定完成==============");
                     //
                 }
             });
