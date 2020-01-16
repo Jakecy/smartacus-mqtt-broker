@@ -19,10 +19,21 @@ public class StartServer {
         try {
             logger.info("【http   Server Start Ok】");
             HttpServer httpServer = new HttpServer();
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        logger.info("【Mqtt Broker  Server Start Ok】");
+                        MqttServer mqttServer = new MqttServer();
+                        mqttServer.run();
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+
+                }
+            }).start();
             httpServer.run();
-            logger.info("【Mqtt Broker  Server Start Ok】");
-            MqttServer mqttServer = new MqttServer();
-            mqttServer.run();
+
         }catch (Exception e){
             e.printStackTrace();
         }
