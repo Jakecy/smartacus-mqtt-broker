@@ -48,7 +48,7 @@ MQTT（Message Queue Telemetry Transport）是一个轻量级开放的消息协�
 | 实现PUBLISH报文  | 难 | xxxx|
 |Qos服务质量保证  | 难 | xxxx|
 |发布订阅模式  | 中 | xxxx|
-|主题通配符  | 中 | xxxx|
+|主题通配符 及 主题过滤机制 | 中 | xxxx|
 |全局异常处理  | 中 | xxxx|
 | http协议处理  | 中 | xxxx|
 | 支持基于mysql的用户名和密码认证  | 中   |xxxx  |
@@ -75,7 +75,7 @@ MQTT（Message Queue Telemetry Transport）是一个轻量级开放的消息协�
 | 实现PUBLISHACK报文  | 难 | 已完成|
 |支持Qos=1服务质量 | 中 | 已完成|
 |支持Qos=2服务质量 | 难 | 已完成|
-|发布订阅模式  | 中 | 主题发布有问题，需修复|
+|发布订阅模式  | 中 | 已完成|
 |客户端登录session   | 易   |已完成  |
 |客户端分组管理   | 中 |初版已完成  |
 |群发离线消息  | 中 |初版已完成  |
