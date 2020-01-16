@@ -17,8 +17,6 @@ public class StartServer {
 
     public static void main(String[] args)  {
         try {
-            logger.info("【http   Server Start Ok】");
-            HttpServer httpServer = new HttpServer();
             new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -32,6 +30,8 @@ public class StartServer {
 
                 }
             }).start();
+            logger.info("【http   Server Start Ok】");
+            HttpServer httpServer = new HttpServer();
             httpServer.run();
 
         }catch (Exception e){
