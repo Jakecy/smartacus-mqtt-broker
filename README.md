@@ -50,6 +50,7 @@ MQTT（Message Queue Telemetry Transport）是一个轻量级开放的消息协�
 |发布订阅模式  | 中 | xxxx|
 |主题通配符  | 中 | xxxx|
 |全局异常处理  | 中 | xxxx|
+| http协议处理  | 中 | xxxx|
 | 支持基于mysql的用户名和密码认证  | 中   |xxxx  |
 | 支持auth2认证  | 中   |xxxx  |
 | 支持动态配置,能够读取外部配置文件的配置进行初始化 | 中   |xxxx  |
