@@ -45,7 +45,7 @@ public class HttpHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
     private static  final String  CONNECTIONS="/connections";
 
-    private static  final String  TOPICS="topics";
+    private static  final String  TOPICS="/topics";
 
 
 
