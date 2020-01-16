@@ -54,7 +54,7 @@ public class HttpHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
             String reqBody=StrUtil.ByteBuf2String(content);
             if(DASHBOARD.equals(uri) && method.equals(HttpMethod.GET)){
                 ConcurrentHashMap<String, ClientConnection> connectionFactory = ConnectionFactory.connectionFactory;
-                response(ctx,new Result<ConcurrentHashMap>().ok(connectionFactory));
+                response(ctx,connectionFactory);
             }
         }catch (Exception  e){
             e.printStackTrace();
@@ -63,8 +63,9 @@ public class HttpHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
         }
     }
 
-    private void response(ChannelHandlerContext ctx, Result result) {
+    private void response(ChannelHandlerContext ctx, Object res) {
         // 1.设置响应
+       Result result= new Result<Object>().ok(res);
         FullHttpResponse resp = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
                 HttpResponseStatus.OK,
                 Unpooled.copiedBuffer(JSONObject.toJSONString(result), CharsetUtil.UTF_8));
