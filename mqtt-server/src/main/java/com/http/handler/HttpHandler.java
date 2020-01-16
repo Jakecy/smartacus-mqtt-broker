@@ -3,6 +3,7 @@ package com.http.handler;
 import com.alibaba.fastjson.JSONObject;
 import com.http.message.Content;
 import com.http.result.Result;
+import com.http.vo.ClientConnectionVO;
 import com.mqtt.connection.ClientConnection;
 import com.mqtt.connection.ConnectionFactory;
 import com.mqtt.utils.StrUtil;
@@ -16,6 +17,7 @@ import io.netty.handler.codec.http.*;
 import io.netty.util.CharsetUtil;
 
 import javax.swing.text.AbstractDocument;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,6 +37,8 @@ public class HttpHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
     private static  final String  DASHBOARD="/dashboard";
 
+    private static  final String  CONNECTIONS="/connections";
+
 
 
 
@@ -52,9 +56,9 @@ public class HttpHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
             //请求体
             ByteBuf content = req.content();
             String reqBody=StrUtil.ByteBuf2String(content);
-            if(DASHBOARD.equals(uri) && method.equals(HttpMethod.GET)){
+            if(CONNECTIONS.equals(uri) && method.equals(HttpMethod.GET)){
                 ConcurrentHashMap<String, ClientConnection> connectionFactory = ConnectionFactory.connectionFactory;
-                response(ctx,connectionFactory);
+                getConnections(ctx,connectionFactory);
             }
         }catch (Exception  e){
             e.printStackTrace();
@@ -62,6 +66,8 @@ public class HttpHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
             
         }
     }
+
+
 
     private void response(ChannelHandlerContext ctx, Object res) {
         // 1.设置响应
@@ -73,5 +79,32 @@ public class HttpHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
         // 2.发送
         // 注意必须在使用完之后，close channel
         ctx.writeAndFlush(resp).addListener(ChannelFutureListener.CLOSE);
+    }
+
+    private void getConnections(ChannelHandlerContext ctx, ConcurrentHashMap<String,ClientConnection> connectionFactory) {
+        ArrayList<ClientConnectionVO> vos = new ArrayList<>();
+        if(null !=connectionFactory && !connectionFactory.isEmpty()){
+            connectionFactory.forEach((k,v)->{
+                ClientConnectionVO  vo=new ClientConnectionVO();
+                vo.setClientId(v.getClientId());
+                vo.setUsername(v.getUsername());
+                vo.setIp(v.getIp());
+                vo.setPort(v.getPort());
+                vo.setConnectedDate(v.getConnectedDate());
+                vo.setProtocolVersion(v.getProtocolVersion());
+                vo.setPassword(v.getPassword());
+                vos.add(vo);
+            });
+        }
+        // 1.设置响应
+        Result result= new Result<Object>().ok(vos);
+        FullHttpResponse resp = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
+                HttpResponseStatus.OK,
+                Unpooled.copiedBuffer(JSONObject.toJSONString(result), CharsetUtil.UTF_8));
+        resp.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/html; charset=UTF-8");
+        // 2.发送
+        // 注意必须在使用完之后，close channel
+        ctx.writeAndFlush(resp).addListener(ChannelFutureListener.CLOSE);
+
     }
 }
