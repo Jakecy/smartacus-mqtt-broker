@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.mqtt.common.ChannelAttributes;
 import com.mqtt.config.UsernamePasswordAuth;
+import com.mqtt.dto.SocketAddressDTO;
 import com.mqtt.manager.SessionManager;
 import com.mqtt.message.Qos2Message;
 import com.mqtt.utils.CompellingUtil;
@@ -13,12 +14,14 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.mqtt.*;
 import io.netty.util.CharsetUtil;
 import io.netty.util.ReferenceCountUtil;
 import javafx.geometry.Pos;
 import lombok.Data;
 
+import java.net.SocketAddress;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -43,6 +46,18 @@ public class ClientConnection {
     private final  ConnectionFactory  connectionFactory;
 
     private  String clientId;
+
+    private  String  username;
+
+    private  String  password;
+
+    private String   ip;
+
+    private String  port;
+
+    private String  protocolVersion;
+
+    private Date  connectedDate;
 
     private final Channel channel;
 
@@ -84,10 +99,10 @@ public class ClientConnection {
 
 
 
-    public void handleMqttMessage(MqttMessage mqttMessage) throws Exception{
+    public void handleMqttMessage(ChannelHandlerContext ctx, MqttMessage mqttMessage) throws Exception{
         switch (mqttMessage.fixedHeader().messageType()) {
             case CONNECT:
-                handleConnectMessage(mqttMessage);
+                handleConnectMessage(ctx,mqttMessage);
                 break;
             case PINGREQ:
                 handlePingReqMessage(mqttMessage);
@@ -256,12 +271,12 @@ public class ClientConnection {
     }
 
 
-    private void handleConnectMessage(MqttMessage mqttMessage) {
+    private void handleConnectMessage(ChannelHandlerContext ctx, MqttMessage mqttMessage) {
         //合法性校验
         //建立连接、进行响应
         Boolean valid=checkValid(mqttMessage);
         if(valid){
-            buildConnection(mqttMessage);
+            buildConnection(ctx,mqttMessage);
             //返回响应
             String clientId = CompellingUtil.getClientId(this.channel);
             PostMan.sendConnAck(clientId, (MqttConnectMessage) mqttMessage);
@@ -271,11 +286,20 @@ public class ClientConnection {
         }
     }
 
-    private void buildConnection(MqttMessage mqttMessage) {
+    private void buildConnection(ChannelHandlerContext ctx, MqttMessage mqttMessage) {
+        SocketAddress remoteAddr = ctx.channel().remoteAddress();
+        System.out.println("================远程地址=============");
+        System.out.println(JSONObject.toJSONString(remoteAddr));
+        SocketAddressDTO  address=JSONObject.parseObject(JSONObject.toJSONString(remoteAddr),SocketAddressDTO.class);
+        Optional.ofNullable(address).ifPresent(ad->{
+            this.ip=address.getAddress();
+            this.port=address.getPort();
+        });
         MqttConnectMessage connectMsg=(MqttConnectMessage)mqttMessage;
         MqttConnectPayload connectPayload = connectMsg.payload();
         channel.attr(ChannelAttributes.ATTR_KEY_CLIENTID).set(connectPayload.clientIdentifier());
         this.clientId=channel.attr(ChannelAttributes.ATTR_KEY_CLIENTID).get();
+        this.connectedDate=new Date();
         connectionFactory.putConnection(this);
     }
 
@@ -306,7 +330,7 @@ public class ClientConnection {
                 String password =buf.toString(CharsetUtil.UTF_8);
                 if(!(UsernamePasswordAuth.username.equals(userName) &&UsernamePasswordAuth.password.equals(password))){
                    return false;
-                }
+                }else this.username=userName;
             }else {
                 return false;
             }

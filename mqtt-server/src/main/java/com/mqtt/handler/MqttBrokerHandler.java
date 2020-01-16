@@ -25,6 +25,7 @@ import io.netty.util.ReferenceCountUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.SocketAddress;
 import java.sql.Ref;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -146,6 +147,9 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object o) throws Exception {
+        SocketAddress socketAddress = ctx.channel().remoteAddress();
+        System.out.println("=====================连接信息===========");
+        System.out.println(JSONObject.toJSONString(socketAddress));
         //判断是否是mqtt协议
         if(!(o instanceof MqttMessage)){
             ctx.close();
@@ -154,7 +158,7 @@ public class MqttBrokerHandler extends ChannelInboundHandlerAdapter {
         MqttMessage mqttMessage = (MqttMessage) o;
         ClientConnection connection = ctx.channel().attr(ATTR_KEY_CONNECTION).get();
         try {
-            connection.handleMqttMessage(mqttMessage);
+            connection.handleMqttMessage(ctx,mqttMessage);
         }catch (Exception e){
                  e.printStackTrace();
             logger.error(" exception hanppened while process mqttmessage, message is : {}, exception is : {} ",mqttMessage,e);
