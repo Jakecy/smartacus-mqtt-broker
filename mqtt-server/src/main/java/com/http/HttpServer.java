@@ -45,7 +45,7 @@ public class HttpServer {
                     //设置子Socket的keepalive时间
                     .childOption(ChannelOption.SO_KEEPALIVE,true);
             //绑定端口号
-            ChannelFuture cf = sboot.bind(8080).sync();
+            ChannelFuture cf = sboot.bind(18088).sync();
             cf.channel().closeFuture().sync();
         }finally {
             workerGroup.shutdownGracefully();
